@@ -631,7 +631,7 @@ msgstr ""
 #: templates/email/part_event_notification.html:15
 #: templates/email/stale_stock_notification.html:17
 msgid "Part"
-msgstr ""
+msgstr "Inventory"
 
 #: build/api.py:123 build/api.py:126 build/serializers.py:1474 part/api.py:1012
 #: part/api.py:1410 part/models.py:413 part/models.py:1150 part/models.py:3468
@@ -6357,7 +6357,7 @@ msgstr ""
 
 #: part/models.py:530 part/serializers.py:135 users/ruleset.py:30
 msgid "Parts"
-msgstr ""
+msgstr "Inventory"
 
 #: part/models.py:576
 msgid "Cannot delete parameters of a locked part"

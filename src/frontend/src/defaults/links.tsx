@@ -36,7 +36,7 @@ export function getNavTabs(user: UserStateProps): NavTab[] {
     },
     {
       name: 'part',
-      title: t`Parts`,
+      title: t`Inventory`,
       icon: <IconBox />,
       visible:
         user.hasViewRole(UserRoles.part) ||
@@ -54,7 +54,7 @@ export function getNavTabs(user: UserStateProps): NavTab[] {
     },
     {
       name: 'manufacturing',
-      title: t`Manufacturing`,
+      title: t`Projects`,
       icon: <IconBuildingFactory2 />,
       visible: user.hasViewRole(UserRoles.build)
     },

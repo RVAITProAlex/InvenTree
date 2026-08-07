@@ -97,7 +97,7 @@ export function useBuildOrderFields({
           });
         }
       },
-      title: t'New Project',
+      title: t`New Project`,
       quantity: {},
       project_code: ProjectCodeField(),
       priority: {},

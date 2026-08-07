@@ -97,7 +97,7 @@ export function useBuildOrderFields({
           });
         }
       },
-      title: t`New Project`,
+      title: {},
       quantity: {},
       project_code: ProjectCodeField(),
       priority: {},
@@ -410,7 +410,7 @@ export function useCompleteBuildOutputsForm({
   return useCreateApiFormModal({
     url: apiUrl(ApiEndpoints.build_output_complete, build.pk),
     method: 'POST',
-    title: t`Complete Build Outputs`,
+    title: t`New Project`,
     fields: buildOutputCompleteFields,
     onFormSuccess: onFormSuccess,
     successMessage: null,

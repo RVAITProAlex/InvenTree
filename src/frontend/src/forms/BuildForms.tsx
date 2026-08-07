@@ -69,7 +69,7 @@ export function useBuildOrderFields({
     const fields: ApiFormFieldSet = {
       reference: {
         label: t`Project ID`,
-        description: t'Project ID Reference',
+        description: t`Project ID Reference`,
       },
       part: {
         label: t`Inventory`

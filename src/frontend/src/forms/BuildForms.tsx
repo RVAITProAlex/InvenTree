@@ -67,8 +67,12 @@ export function useBuildOrderFields({
 
   return useMemo(() => {
     const fields: ApiFormFieldSet = {
-      reference: {},
+      reference: {
+        label: t'Project ID',
+        description: t'Project ID Reference',
+      },
       part: {
+        label: t'Inventory'
         disabled: !create,
         filters: {
           assembly: true,
@@ -93,7 +97,7 @@ export function useBuildOrderFields({
           });
         }
       },
-      title: {},
+      title: t'New Project',
       quantity: {},
       project_code: ProjectCodeField(),
       priority: {},

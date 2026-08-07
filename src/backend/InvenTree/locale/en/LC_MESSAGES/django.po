@@ -765,7 +765,7 @@ msgstr ""
 #: stock/serializers.py:98 templates/email/build_order_completed.html:16
 #: templates/email/overdue_build_order.html:15
 msgid "Build Order"
-msgstr ""
+msgstr "Project"
 
 #: build/api.py:1106 build/api.py:1110 build/serializers.py:412
 #: build/serializers.py:518 build/serializers.py:569 build/serializers.py:1241
@@ -791,7 +791,7 @@ msgstr ""
 
 #: build/models.py:122 users/ruleset.py:34
 msgid "Build Orders"
-msgstr ""
+msgstr "Projects"
 
 #: build/models.py:182
 msgid "Assembly BOM has not been validated"

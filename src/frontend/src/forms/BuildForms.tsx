@@ -72,7 +72,7 @@ export function useBuildOrderFields({
         description: t`Project ID Reference`,
       },
       part: {
-        label: t`Inventory`
+        label: t`Inventory`,
         disabled: !create,
         filters: {
           assembly: true,

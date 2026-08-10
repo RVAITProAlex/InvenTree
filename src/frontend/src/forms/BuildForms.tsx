@@ -77,8 +77,9 @@ export function useBuildOrderFields({
         label: t`For who?`,
         description: t`Select associated company`,
         field_type: 'related field',
-        api_url: ApiEndpoints.company_list,
+        api_url: 'apiUrl(ApiEndpoints.company_list)',
         model: ModelType.company,
+        required: true,
       },
       // 3. Description of project
       title: {
@@ -134,7 +135,8 @@ export function useBuildOrderFields({
         icon: <IconUsersGroup />,
         filters: {
           is_active: true
-        }
+        },
+        required: true,
       },
       // Hidden fields required by backend API validation
       part: {

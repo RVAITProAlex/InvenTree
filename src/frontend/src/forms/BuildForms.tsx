@@ -77,7 +77,7 @@ export function useBuildOrderFields({
         label: t`For who?`,
         description: t`Select associated company`,
         field_type: 'related field',
-        api_url: 'apiUrl(ApiEndpoints.company_list)',
+        api_url: '/api/company',
         model: ModelType.company,
         required: true,
       },

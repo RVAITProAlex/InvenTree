@@ -77,8 +77,7 @@ export function useBuildOrderFields({
         label: t`For who?`,
         description: t`Select associated company`,
         field_type: 'related field',
-        api_url: ApiEndpoints.company_list,
-        filters: { is_customer: true }
+        api_url: ApiEndpoints.company_list
       },
       // 3. Description of project
       title: {

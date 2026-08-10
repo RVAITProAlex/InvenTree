@@ -120,7 +120,7 @@ export function PartListTable({
   enableImport = true,
   basePartInstance,
   props,
-  tableName = 'part-list',
+  tableName = 'item-list',
   defaultPartData
 }: Readonly<{
   enableImport?: boolean;
@@ -196,7 +196,7 @@ export function PartListTable({
 
   const duplicatePart = useCreateApiFormModal({
     url: ApiEndpoints.part_list,
-    title: t`Add Part`,
+    title: t`Add Item`,
     fields: duplicatePartFields,
     initialData: {
       ...selectedPart,
@@ -248,7 +248,7 @@ export function PartListTable({
   const tableActions = useMemo(() => {
     return [
       <ActionDropdown
-        tooltip={t`Part Actions`}
+        tooltip={t`Item Actions`}
         icon={<InvenTreeIcon icon='part' />}
         disabled={!table.hasSelectedRecords}
         position='bottom-start'
@@ -264,9 +264,9 @@ export function PartListTable({
             }
           },
           {
-            name: t`Order Parts`,
+            name: t`Order Items`,
             icon: <IconShoppingCart color='blue' />,
-            tooltip: t`Order selected parts`,
+            tooltip: t`Order selected items`,
             hidden: !user.hasAddRole(UserRoles.purchase_order),
             onClick: () => {
               orderPartsWizard.openWizard();

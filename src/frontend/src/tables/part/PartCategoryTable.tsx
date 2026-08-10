@@ -102,7 +102,7 @@ export function PartCategoryTable({ parentId }: Readonly<{ parentId?: any }>) {
 
   const newCategory = useCreateApiFormModal({
     url: ApiEndpoints.category_list,
-    title: t`New Part Category`,
+    title: t`New Inventory Category`,
     fields: newCategoryFields,
     focus: 'name',
     initialData: {

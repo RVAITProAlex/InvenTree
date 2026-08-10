@@ -658,7 +658,7 @@ export default function PartDetail() {
 
   const duplicatePart = useCreateApiFormModal({
     url: ApiEndpoints.part_list,
-    title: t`Add Part`,
+    title: t`Add Item`,
     fields: duplicatePartFields,
     initialData: {
       ...part,
@@ -796,7 +796,7 @@ export default function PartDetail() {
         <Stack gap='xs'>
           {user.hasViewRole(UserRoles.part_category) && (
             <NavigationTree
-              title={t`Part Categories`}
+              title={t`Inventory Categories`}
               childIdentifier='subcategories'
               modelType={ModelType.partcategory}
               endpoint={ApiEndpoints.category_tree}

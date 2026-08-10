@@ -53,7 +53,7 @@ export function getNavTabs(user: UserStateProps): NavTab[] {
           user.hasViewRole(UserRoles.transfer_order))
     },
     {
-      name: 'manufacturing',
+      name: 'projects',
       title: t`Projects`,
       icon: <IconBuildingFactory2 />,
       visible: user.hasViewRole(UserRoles.build)

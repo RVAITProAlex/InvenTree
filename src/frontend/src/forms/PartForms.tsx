@@ -37,7 +37,9 @@ export function usePartFields({
           structural: false
         }
       },
-      name: {},
+      name: {
+        label: t`Item Name`
+      },
       IPN: {},
       description: {},
       revision: {},
@@ -230,7 +232,7 @@ export function partCategoryFields({
   const fields: ApiFormFieldSet = useMemo(() => {
     const fields: ApiFormFieldSet = {
       parent: {
-        description: t`Parent part category`,
+        description: t`Parent category`,
         required: false
       },
       name: {},

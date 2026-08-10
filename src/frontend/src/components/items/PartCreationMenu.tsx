@@ -59,7 +59,7 @@ export function PartCreationMenu({
 
   const newPart = useCreateApiFormModal({
     url: ApiEndpoints.part_list,
-    title: t`Add Part`,
+    title: t`Add Item`,
     fields: newPartFields,
     initialData: partInitialData,
     follow: true,
@@ -77,15 +77,15 @@ export function PartCreationMenu({
       {importPartWizard.wizard}
       <ActionDropdown
         key='add-parts-actions'
-        tooltip={t`Add Parts`}
+        tooltip={t`Add Item`}
         position='bottom-start'
         icon={<IconPlus />}
         hidden={!user.hasAddRole(UserRoles.part)}
         actions={[
           {
-            name: t`Create Part`,
+            name: t`Create Item`,
             icon: <IconPlus />,
-            tooltip: t`Create a new part`,
+            tooltip: t`Create a new item`,
             onClick: () => newPart.open()
           },
           {

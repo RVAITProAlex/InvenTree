@@ -203,7 +203,7 @@ export default function CategoryDetail() {
       },
       {
         name: 'subcategories',
-        label: id ? t`Subcategories` : t`Part Categories`,
+        label: id ? t`Subcategories` : t`Inventory Categories`,
         icon: <IconSitemap />,
         content: <PartCategoryTable parentId={id} />
       },
@@ -303,7 +303,7 @@ export default function CategoryDetail() {
           <LoadingOverlay visible={instanceQuery.isFetching} />
           <NavigationTree
             modelType={ModelType.partcategory}
-            title={t`Part Categories`}
+            title={t`Inventory Categories`}
             endpoint={ApiEndpoints.category_tree}
             childIdentifier='subcategories'
             opened={treeOpen}

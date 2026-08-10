@@ -73,11 +73,13 @@ export function useBuildOrderFields({
         description: t`Project ID Reference`
       },
       // 2. For who? (company)
-      tags: TagsField({
+      tags:{
+       ...TagsField({
         label: t`For who?`,
-        description: t`Select associated company`,
+        description: t`Select associated company`
+        }),
         required: true
-      }),
+      },
       // 3. Description of project
       title: {
         label: t`Description of project`,

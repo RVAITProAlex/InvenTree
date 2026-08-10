@@ -59,6 +59,7 @@ from .models import Build, BuildItem, BuildLine
 from .status_codes import BuildStatus
 from .validators import check_build_output
 
+from part.models import Part
 
 class BuildSerializer(
     CustomStatusSerializerMixin,

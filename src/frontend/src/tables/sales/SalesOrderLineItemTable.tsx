@@ -146,7 +146,7 @@ export default function SalesOrderLineItemTable({
         title: t`Available Stock`,
         render: (record: any) => {
           if (record.part_detail?.virtual) {
-            return <Text size='sm' fs='italic'>{t`Virtual part`}</Text>;
+            return <Text size='sm' fs='italic'>{t`Virtual inventory`}</Text>;
           }
 
           const part_stock = record?.available_stock ?? 0;
@@ -204,7 +204,7 @@ export default function SalesOrderLineItemTable({
         sortable: true,
         render: (record: any) => {
           if (record.part_detail?.virtual) {
-            return <Text size='sm' fs='italic'>{t`Virtual part`}</Text>;
+            return <Text size='sm' fs='italic'>{t`Virtual inventory`}</Text>;
           }
 
           return (
@@ -221,7 +221,7 @@ export default function SalesOrderLineItemTable({
         sortable: true,
         render: (record: any) => {
           if (record.part_detail?.virtual) {
-            return <Text size='sm' fs='italic'>{t`Virtual part`}</Text>;
+            return <Text size='sm' fs='italic'>{t`Virtual inventory`}</Text>;
           }
 
           return (

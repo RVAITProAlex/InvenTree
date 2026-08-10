@@ -152,7 +152,7 @@ export default function BuildAllocatedStockTable({
       }),
       {
         accessor: 'sku',
-        title: t`Supplier Part`,
+        title: t`Supplier Inventory`,
         render: (record: any) => record?.supplier_part_detail?.SKU,
         sortable: true,
         copyable: true,

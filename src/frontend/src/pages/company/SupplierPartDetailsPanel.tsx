@@ -196,7 +196,7 @@ export function SupplierPartDetailsPanel({
             refresh={refreshInstance}
           />
           <Grid.Col span={8}>
-            <DetailsTable title={t`Part Details`} fields={tl} item={data} />
+            <DetailsTable title={t`Inventory Details`} fields={tl} item={data} />
           </Grid.Col>
         </Grid>
         <TagsList tags={instance?.tags} />

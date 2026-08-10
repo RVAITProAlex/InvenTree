@@ -282,7 +282,7 @@ export default function PartDetail() {
     return [
       {
         name: 'details',
-        label: t`Part Details`,
+        label: t`Inventory Details`,
         icon: <IconInfoCircle />,
         content: (
           <PartDetailsPanel
@@ -530,7 +530,7 @@ export default function PartDetail() {
 
   const breadcrumbs = useMemo(() => {
     return [
-      { name: t`Parts`, url: '/part' },
+      { name: t`Inventory`, url: '/part' },
       ...(part.category_path ?? []).map((c: any) => ({
         name: c.name,
         url: getDetailUrl(ModelType.partcategory, c.pk)
@@ -808,7 +808,7 @@ export default function PartDetail() {
             />
           )}
           <PageDetail
-            title={`${t`Part`}: ${part.full_name}`}
+            title={`${t`Inventory`}: ${part.full_name}`}
             icon={
               lockingEnabled ? (
                 <ActionIcon

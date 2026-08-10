@@ -109,7 +109,7 @@ export function ManufacturerPartDetailsPanel({
             refresh={refreshInstance}
           />
           <Grid.Col span={{ base: 12, sm: 8 }}>
-            <DetailsTable title={t`Part Details`} fields={tl} item={instance} />
+            <DetailsTable title={t`Inventory Details`} fields={tl} item={instance} />
           </Grid.Col>
         </Grid>
         <TagsList tags={instance?.tags} />

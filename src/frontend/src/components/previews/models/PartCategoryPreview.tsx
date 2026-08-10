@@ -9,7 +9,7 @@ export function PartCategoryPreviewComponent({
   instance: any;
   modelId: number;
 }>): PreviewType {
-  const name = `${t`Part Category`} - ${instance?.name ?? `#${modelId}`}`;
+  const name = `${t`Inventory Category`} - ${instance?.name ?? `#${modelId}`}`;
 
   return {
     title: name,

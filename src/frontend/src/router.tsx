@@ -185,7 +185,7 @@ export const routes = (
         <Route path='item/:id/*' element={<StockDetail />} />
         <Route path='transfer-order/:id/*' element={<TransferOrderDetail />} />
       </Route>
-      <Route path='manufacturing/'>
+      <Route path='projects/'>
         <Route index element={<Navigate to='index/' />} />
         <Route path='index/*' element={<BuildIndex />} />
         <Route path='build-order/:id/*' element={<BuildDetail />} />

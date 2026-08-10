@@ -225,7 +225,7 @@ export function StockDetailsPanel({
   const bl: DetailsField[] = [
     {
       name: 'supplier_part',
-      label: t`Supplier Part`,
+      label: t`Supplier Inventory`,
       type: 'link',
       model_field: 'SKU',
       model: ModelType.supplierpart,

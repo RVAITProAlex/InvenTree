@@ -561,7 +561,7 @@ function LineItemFormRow({
                   </ActionIcon>
                 </HoverCard.Target>
                 <HoverCard.Dropdown>
-                  <Alert color='blue' title={t`Virtual Part`}>
+                  <Alert color='blue' title={t`Virtual Inventory`}>
                     {t`This part is virtual, no physical stock will be received.`}
                   </Alert>
                 </HoverCard.Dropdown>
@@ -924,7 +924,7 @@ export function useReceiveLineItems(props: LineItemsForm) {
           );
         },
         headers: [
-          { title: t`Part`, style: { minWidth: '200px' } },
+          { title: t`Inventory`, style: { minWidth: '200px' } },
           { title: t`SKU`, style: { minWidth: '200px' } },
           { title: t`Received`, style: { minWidth: '200px' } },
           { title: t`Quantity`, style: { width: '200px' } },

@@ -117,7 +117,7 @@ export function StockTrackingTable({
           details: deltas.removed
         },
         {
-          label: t`Part`,
+          label: t`Inventory`,
           key: 'part',
           details:
             deltas.part_detail &&
@@ -246,7 +246,7 @@ export function StockTrackingTable({
         switchable: false
       }),
       PartColumn({
-        title: t`Part`,
+        title: t`Inventory`,
         part: 'part_detail',
         switchable: true,
         hidden: !partId

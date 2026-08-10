@@ -282,7 +282,7 @@ function SelectPartsStep({
       },
       {
         accessor: 'part',
-        title: t`Part`,
+        title: t`Inventory`,
         minWidth: 200,
         render: (record: PartOrderRecord) => (
           <Tooltip label={record.part?.description}>
@@ -294,7 +294,7 @@ function SelectPartsStep({
       },
       {
         accessor: 'supplier_part',
-        title: t`Supplier Part`,
+        title: t`Supplier Inventory`,
         width: '40%',
         render: (record: PartOrderRecord) => (
           <Group gap='xs' wrap='nowrap' justify='left'>

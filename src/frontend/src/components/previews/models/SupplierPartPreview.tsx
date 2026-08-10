@@ -12,7 +12,7 @@ export function SupplierPartPreviewComponent({
   const supplier = instance?.supplier_detail?.name ?? instance?.supplier_name;
   const sku = instance?.SKU ?? `#${modelId}`;
 
-  let title = `${t`Supplier Part`} ${sku}`;
+  let title = `${t`Supplier Inventory`} ${sku}`;
 
   if (supplier) {
     title += ` (${supplier})`;

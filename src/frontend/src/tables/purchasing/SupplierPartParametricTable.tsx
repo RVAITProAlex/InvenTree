@@ -29,7 +29,7 @@ export default function SupplierPartParametricTable({
       },
       {
         accessor: 'SKU',
-        title: t`Supplier Part`,
+        title: t`Supplier Inventory`,
         sortable: true,
         copyable: true
       }

@@ -200,7 +200,7 @@ function BomTable({
       <Table>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>{t`Part`}</Table.Th>
+            <Table.Th>{t`Inventory`}</Table.Th>
             <Table.Th>{t`Quantity`}</Table.Th>
             <Table.Th>{t`Changes`}</Table.Th>
           </Table.Tr>

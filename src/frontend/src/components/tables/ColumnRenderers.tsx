@@ -90,7 +90,7 @@ export function RenderPartColumn({
 export function PartColumn(props: PartColumnProps): TableColumn {
   return {
     accessor: 'part',
-    title: t`Part`,
+    title: t`Inventory`,
     sortable: true,
     switchable: false,
     minWidth: '175px',

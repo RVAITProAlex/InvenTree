@@ -109,7 +109,7 @@ function stockItemTableColumns({
     },
     {
       accessor: 'SKU',
-      title: t`Supplier Part`,
+      title: t`Supplier Inventory`,
       sortable: true,
       defaultVisible: false,
       copyable: true

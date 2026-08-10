@@ -109,7 +109,7 @@ const SearchResult = ({
             partId &&
             searchResult.existing_part_id === partId && (
               <Badge size='sm' color='orange'>
-                <Trans>Current part</Trans>
+                <Trans>Current inventory</Trans>
               </Badge>
             )}
           {searchResult.existing_part_id && (

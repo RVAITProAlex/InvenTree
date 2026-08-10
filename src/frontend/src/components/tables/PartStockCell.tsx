@@ -8,7 +8,7 @@ export function renderPartStockCell(record: any): ReactNode {
   if (record.virtual) {
     return (
       <Text size='sm' c='dimmed' fs='italic'>
-        {t`Virtual part`}
+        {t`Virtual inventory`}
       </Text>
     );
   }

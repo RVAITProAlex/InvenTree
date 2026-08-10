@@ -67,7 +67,7 @@ function DrawerContent({ closeFunc }: Readonly<{ closeFunc?: () => void }>) {
       },
       {
         id: 'parts',
-        title: t`Parts`,
+        title: t`Inventory`,
         hidden: !user.hasViewPermission(ModelType.part),
         link: '/part',
         icon: 'part'
@@ -81,8 +81,8 @@ function DrawerContent({ closeFunc }: Readonly<{ closeFunc?: () => void }>) {
       },
       {
         id: 'build',
-        title: t`Manufacturing`,
-        link: '/manufacturing/',
+        title: t`Projects`,
+        link: '/projects/',
         hidden: !user.hasViewRole(UserRoles.build),
         icon: 'build'
       },

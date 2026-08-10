@@ -215,7 +215,7 @@ export default function SystemSettings() {
       },
       {
         name: 'parts',
-        label: t`Parts`,
+        label: t`Inventory`,
         icon: <IconBox />,
         content: (
           <Stack gap='xs'>
@@ -307,8 +307,8 @@ export default function SystemSettings() {
         )
       },
       {
-        name: 'manufacturing',
-        label: t`Manufacturing`,
+        name: 'projects',
+        label: t`Projects`,
         icon: <IconBuildingFactory2 />,
         content: (
           <>

@@ -273,7 +273,7 @@ export function BomTable({
         accessor: 'sub_part_detail.virtual',
         filter: 'sub_part_virtual',
         defaultVisible: false,
-        title: t`Virtual Part`
+        title: t`Virtual Inventory`
       }),
       BooleanColumn({
         accessor: 'optional',
@@ -327,7 +327,7 @@ export function BomTable({
           const building: number = record?.building ?? 0;
 
           if (part?.virtual) {
-            return <Text fs='italic'>{t`Virtual part`}</Text>;
+            return <Text fs='italic'>{t`Virtual inventory`}</Text>;
           }
 
           const text =
@@ -465,7 +465,7 @@ export function BomTable({
       },
       {
         name: 'sub_part_virtual',
-        label: t`Virtual Part`,
+        label: t`Virtual Inventory`,
         description: t`Show virtual items`
       },
       {

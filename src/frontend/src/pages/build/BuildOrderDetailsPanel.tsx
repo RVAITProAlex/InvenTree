@@ -42,7 +42,7 @@ export function BuildOrderDetailsPanel({
     {
       type: 'link',
       name: 'part',
-      label: t`Part`,
+      label: t`Inventory`,
       model: ModelType.part
     },
     {

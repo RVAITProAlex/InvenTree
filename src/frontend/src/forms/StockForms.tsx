@@ -390,7 +390,7 @@ export function useStockItemInstallFields({
         field_type: 'related field',
         required: true,
         exclude: true,
-        label: t`Part`,
+        label: t`Inventory`,
         description: t`Select the part to install`,
         model: ModelType.part,
         api_url: apiUrl(ApiEndpoints.part_list),

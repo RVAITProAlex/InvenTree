@@ -265,7 +265,7 @@ export function PartDetailsPanel({
       icon: 'saleable',
       label: t`Saleable Part`
     },
-    { type: 'boolean', name: 'virtual', label: t`Virtual Part` },
+    { type: 'boolean', name: 'virtual', label: t`Virtual Inventory` },
     { type: 'boolean', name: 'starred', label: t`Subscribed`, icon: 'bell' }
   ];
 

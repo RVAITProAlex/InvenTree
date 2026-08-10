@@ -50,7 +50,7 @@ export function RelatedPartTable({
     return [
       {
         accessor: 'part',
-        title: t`Part`,
+        title: t`Inventory`,
         switchable: false,
         render: (record: any) => {
           const part = getPart(record);

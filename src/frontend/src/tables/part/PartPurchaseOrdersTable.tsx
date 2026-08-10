@@ -56,7 +56,7 @@ export default function PartPurchaseOrdersTable({
       {
         accessor: 'supplier_part_detail.SKU',
         ordering: 'sku',
-        title: t`Supplier Part`,
+        title: t`Supplier Inventory`,
         sortable: true
       },
       {

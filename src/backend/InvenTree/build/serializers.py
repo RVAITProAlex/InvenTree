@@ -1364,7 +1364,10 @@ class BuildLineSerializer(
 
     # Part info fields
     part = serializers.PrimaryKeyRelatedField(
-        source='bom_item.sub_part', label=_('Part'), many=False, read_only=True
+        queryset=Part.objects.all(),
+        label=_('Part'),
+        many=False,
+        required=True
     )
 
     part_category_name = serializers.CharField(
@@ -1693,7 +1696,12 @@ class BuildLineSerializer(
         )
 
         return queryset
-
+    
+def validate_part(self, part):
+        """Ensure that the selected part is an assembly if provided."""
+        if part and not part.assembly:
+            raise serializers.ValidationError(_("Selected part must be an assembly"))
+        return part
 
 class BuildConsumeAllocationSerializer(serializers.Serializer):
     """Serializer for an individual BuildItem to be consumed against a BuildOrder."""

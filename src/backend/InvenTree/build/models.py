@@ -286,6 +286,8 @@ class Build(
         related_name='builds',
         limit_choices_to={'assembly': True},
         help_text=_('Select part to build'),
+        null=True,
+        blank=True,
     )
 
     sales_order = models.ForeignKey(

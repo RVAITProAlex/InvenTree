@@ -73,14 +73,10 @@ export function useBuildOrderFields({
         description: t`Project ID Reference`
       },
       // 2. For who? (company)
-      customer: {
+      tags: TagsField({
         label: t`For who?`,
-        description: t`Select associated company`,
-        field_type: 'related field',
-        api_url: ApiEndpoints.company_list,
-        model: ModelType.company,
-        required: true,
-      },
+        description: t`Select associated company`
+      }),
       // 3. Description of project
       title: {
         label: t`Description of project`,

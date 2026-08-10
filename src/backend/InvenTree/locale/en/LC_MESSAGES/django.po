@@ -6448,7 +6448,7 @@ msgstr ""
 
 #: part/models.py:1125
 msgid "Is this part a variant of another part?"
-msgstr ""
+msgstr "Is this item a variant of another item?"
 
 #: part/models.py:1126
 msgid "Variant Of"
@@ -6477,7 +6477,7 @@ msgstr ""
 
 #: part/models.py:1166
 msgid "Part revision or version number"
-msgstr ""
+msgstr "Item revision or version number"
 
 #: part/models.py:1167 report/models.py:234
 msgid "Revision"
@@ -6485,7 +6485,7 @@ msgstr ""
 
 #: part/models.py:1176
 msgid "Is this part a revision of another part?"
-msgstr ""
+msgstr "Is this item a revision of another item?"
 
 #: part/models.py:1177
 msgid "Revision Of"
@@ -6521,11 +6521,11 @@ msgstr ""
 
 #: part/models.py:1259
 msgid "Units of measure for this part"
-msgstr ""
+msgstr "Units of measure for this item"
 
 #: part/models.py:1266
 msgid "Can this part be built from other parts?"
-msgstr ""
+msgstr "Can this item be built from other items?"
 
 #: part/models.py:1272
 msgid "Can this part be used to build other parts?"
@@ -6533,23 +6533,23 @@ msgstr "Can this item be used to build other items?"
 
 #: part/models.py:1278
 msgid "Does this part have tracking for unique items?"
-msgstr ""
+msgstr "Does this item have tracking for unique items?"
 
 #: part/models.py:1284
 msgid "Can this part have test results recorded against it?"
-msgstr ""
+msgstr "Can this item have test results recorded against it?"
 
 #: part/models.py:1290
 msgid "Can this part be purchased from external suppliers?"
-msgstr ""
+msgstr "Can this item be purchased from external suppliers?"
 
 #: part/models.py:1296
 msgid "Can this part be sold to customers?"
-msgstr ""
+msgstr "can this item be sold to customers?"
 
 #: part/models.py:1300
 msgid "Is this part active?"
-msgstr ""
+msgstr "Is this item active?"
 
 #: part/models.py:1306
 msgid "Locked parts cannot be edited"
@@ -6561,7 +6561,7 @@ msgstr ""
 
 #: part/models.py:1318
 msgid "Is this part consumable, such as glue or a fastener?"
-msgstr ""
+msgstr "Is this item consumable, such as RJ45 heads or CAT6 cable"
 
 #: part/models.py:1323
 msgid "BOM Validated"
@@ -9212,7 +9212,7 @@ msgstr ""
 
 #: stock/models.py:1166
 msgid "Base part"
-msgstr ""
+msgstr "Base item"
 
 #: stock/models.py:1176
 msgid "Select a matching supplier part for this stock item"

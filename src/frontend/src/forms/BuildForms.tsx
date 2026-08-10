@@ -67,98 +67,85 @@ export function useBuildOrderFields({
 
   return useMemo(() => {
     const fields: ApiFormFieldSet = {
+      // 1. Project ID
       reference: {
         label: t`Project ID`,
-        description: t`Project ID Reference`,
+        description: t`Project ID Reference`
       },
-      part: {
-        label: t`Inventory`,
-        disabled: !create,
-        filters: {
-          assembly: true,
-          virtual: false,
-          active: globalSettings.isSet('BUILDORDER_REQUIRE_ACTIVE_PART')
-            ? true
-            : undefined,
-          locked: globalSettings.isSet('BUILDORDER_REQUIRE_LOCKED_PART')
-            ? true
-            : undefined
-        },
-        onValueChange(value: any, record?: any) {
-          // Adjust the destination location for the build order
-          if (record) {
-            setDestination(
-              record.default_location || record.category_default_location
-            );
-          }
-
-          batchGenerator.update({
-            part: value
-          });
-        }
+      // 2. For who? (company)
+      customer: {
+        label: t`For who?`,
+        description: t`Select associated company`,
+        field_type: 'related field',
+        api_url: ApiEndpoints.company_list,
+        filters: { is_customer: true }
       },
-      title: {},
-      quantity: {},
-      project_code: ProjectCodeField(),
-      priority: {},
+      // 3. Description of project
+      title: {
+        label: t`Description of project`,
+        description: t`Brief description of the project`
+      },
+      // 4. Priority
+      priority: {
+        label: t`Priority`,
+        description: t`Priority level for this project`
+      },
+      // 5. Parent Project (if applicable)
       parent: {
+        label: t`Parent Project`,
+        description: t`Parent project to which this is allocated`,
         icon: <IconSitemap />,
         filters: {
           part_detail: true
         }
       },
+      // 6. Sales order reference
       sales_order: {
+        label: t`Sales order reference`,
+        description: t`Sales order reference link`,
         icon: <IconTruckDelivery />
       },
-      batch: {
-        placeholder: batchGenerator.result,
-        placeholderAutofill: true,
-        value: batchCode,
-        onValueChange: (value: any) => setBatchCode(value)
-      },
+      // 7. Start date
       start_date: {
+        label: t`Start date`,
         icon: <IconCalendar />
       },
+      // 8. Target completion date
       target_date: {
+        label: t`Target completion date`,
         icon: <IconCalendar />
       },
-      take_from: {},
+      // 9. Source location
+      take_from: {
+        label: t`Source location`
+      },
+      // 10. Destination
       destination: {
+        label: t`Destination`,
         filters: {
           structural: false
         },
         value: destination
       },
-      tags: TagsField({}),
-      link: {
-        icon: <IconLink />
-      },
+      // 11. Responsible
       responsible: {
+        label: t`Responsible`,
+        description: t`User or group responsible for this project`,
         icon: <IconUsersGroup />,
         filters: {
           is_active: true
         }
       },
-      external: {},
-      duplicate: DuplicateField({
-        originalId: duplicateBuildId,
-        extraFields: {
-          copy_parameters: {}
-        }
-      })
+      // Hidden fields required by backend API validation
+      part: {
+        hidden: true,
+        value: 1
+      },
+      quantity: {
+        hidden: true,
+        value: 1
+      }
     };
-
-    if (!globalSettings.isSet('PROJECT_CODES_ENABLED', true)) {
-      delete fields.project_code;
-    }
-
-    if (!globalSettings.isSet('BUILDORDER_EXTERNAL_BUILDS', true)) {
-      delete fields.external;
-    }
-
-    if (!duplicateBuildId) {
-      delete fields.duplicate;
-    }
 
     return fields;
   }, [

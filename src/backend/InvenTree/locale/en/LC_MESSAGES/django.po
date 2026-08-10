@@ -807,7 +807,7 @@ msgstr ""
 
 #: build/models.py:214
 msgid "Build orders can only be externally fulfilled for purchaseable parts"
-msgstr ""
+msgstr "Build orders can only be externally fulfilled for purchaseable items"
 
 #: build/models.py:221 order/models.py:414
 msgid "Responsible user or group must be specified"
@@ -998,7 +998,7 @@ msgstr ""
 
 #: build/models.py:1186
 msgid "Serial numbers must be provided for trackable parts"
-msgstr ""
+msgstr "Serial numbers must be provided for trackable items"
 
 #: build/models.py:1278 build/models.py:1364
 msgid "No build output specified"
@@ -1150,7 +1150,7 @@ msgstr ""
 
 #: build/serializers.py:145 part/serializers.py:1285
 msgid "Part Name"
-msgstr ""
+msgstr "Item Name"
 
 #: build/serializers.py:247 build/serializers.py:919
 msgid "Build Output"
@@ -1178,11 +1178,11 @@ msgstr ""
 
 #: build/serializers.py:383
 msgid "Integer quantity required for trackable parts"
-msgstr ""
+msgstr "Integer quantity required for trackable items"
 
 #: build/serializers.py:389
 msgid "Integer quantity required, as the bill of materials contains trackable parts"
-msgstr ""
+msgstr "Integer quantity required, as the bill of materials contains trackable items"
 
 #: build/serializers.py:406 order/serializers.py:899 order/serializers.py:1888
 #: order/serializers.py:2978 stock/serializers.py:735
@@ -1344,11 +1344,11 @@ msgstr ""
 
 #: build/serializers.py:963
 msgid "Build output must be specified for allocation of tracked parts"
-msgstr ""
+msgstr "Build output must be specified for allocation of tracked items"
 
 #: build/serializers.py:971
 msgid "Build output cannot be specified for allocation of untracked parts"
-msgstr ""
+msgstr "Build output cannot be specified for allocation of untracked items"
 
 #: build/serializers.py:1020 order/serializers.py:1977
 #: order/serializers.py:2829
@@ -1357,7 +1357,7 @@ msgstr ""
 
 #: build/serializers.py:1054
 msgid "Stock location where parts are to be sourced (leave blank to take from any location)"
-msgstr ""
+msgstr "Stock location where items are to be sourced (leave blank to take from any location)"
 
 #: build/serializers.py:1063 order/serializers.py:2044
 msgid "Exclude Location"
@@ -1381,7 +1381,7 @@ msgstr ""
 
 #: build/serializers.py:1076
 msgid "Allow allocation of substitute parts"
-msgstr ""
+msgstr "Allow allocation of substitute items"
 
 #: build/serializers.py:1081
 msgid "Optional Items"
@@ -1437,7 +1437,7 @@ msgstr ""
 
 #: build/serializers.py:1178
 msgid "BOM Part Name"
-msgstr ""
+msgstr "BOM Item Name"
 
 #: build/serializers.py:1230
 msgid "Install Into"
@@ -1463,7 +1463,7 @@ msgstr ""
 
 #: build/serializers.py:1372
 msgid "Part Category Name"
-msgstr ""
+msgstr "Item Category Name"
 
 #: build/serializers.py:1410 common/setting/system.py:500 part/models.py:1277
 msgid "Trackable"
@@ -2919,7 +2919,7 @@ msgstr ""
 
 #: common/setting/system.py:407
 msgid "Enable locking of parts to prevent modification"
-msgstr ""
+msgstr "Enable locking of items to prevent modification"
 
 #: common/setting/system.py:412
 msgid "Part Revisions"
@@ -2959,7 +2959,7 @@ msgstr ""
 
 #: common/setting/system.py:435
 msgid "Allow multiple parts to share the same IPN"
-msgstr ""
+msgstr "Allow multiple items to share the same IPN"
 
 #: common/setting/system.py:440
 msgid "Allow Editing IPN"
@@ -3048,7 +3048,7 @@ msgstr ""
 
 #: common/setting/system.py:512
 msgid "Show related parts"
-msgstr ""
+msgstr "Show related items"
 
 #: common/setting/system.py:513
 msgid "Display related parts for a part"
@@ -3072,11 +3072,11 @@ msgstr ""
 
 #: common/setting/system.py:532
 msgid "Part Name Display Format"
-msgstr ""
+msgstr "Item Name Display Format"
 
 #: common/setting/system.py:533
 msgid "Format to display the part name"
-msgstr ""
+msgstr "Format to display the item name"
 
 #: common/setting/system.py:539
 msgid "Part Category Default Icon"
@@ -3172,7 +3172,7 @@ msgstr ""
 
 #: common/setting/system.py:634
 msgid "Enable internal prices for parts"
-msgstr ""
+msgstr "Enable internal prices for items"
 
 #: common/setting/system.py:639
 msgid "Internal Price Override"
@@ -3961,23 +3961,23 @@ msgstr ""
 
 #: common/setting/user.py:51
 msgid "Search Parts"
-msgstr ""
+msgstr "Search Items"
 
 #: common/setting/user.py:52
 msgid "Display parts in search preview window"
-msgstr ""
+msgstr "Display items in search preview window"
 
 #: common/setting/user.py:57
 msgid "Search Supplier Parts"
-msgstr ""
+msgstr "Search Supplier Items"
 
 #: common/setting/user.py:58
 msgid "Display supplier parts in search preview window"
-msgstr ""
+msgstr "Display supplier items in search preview window"
 
 #: common/setting/user.py:63
 msgid "Search Manufacturer Parts"
-msgstr ""
+msgstr "Search Manufacturer Items"
 
 #: common/setting/user.py:64
 msgid "Display manufacturer parts in search preview window"
@@ -3985,11 +3985,11 @@ msgstr ""
 
 #: common/setting/user.py:69
 msgid "Hide Inactive Parts"
-msgstr ""
+msgstr "Hide Inactive Items"
 
 #: common/setting/user.py:70
 msgid "Excluded inactive parts from search preview window"
-msgstr ""
+msgstr "Exclude inactive items from search preview window"
 
 #: common/setting/user.py:75
 msgid "Search Categories"
@@ -3997,7 +3997,7 @@ msgstr ""
 
 #: common/setting/user.py:76
 msgid "Display part categories in search preview window"
-msgstr ""
+msgstr "Display item categories in search preview window"
 
 #: common/setting/user.py:81
 msgid "Search Stock"
@@ -4225,7 +4225,7 @@ msgstr ""
 
 #: common/setting/user.py:267
 msgid "Show full part categories in tables"
-msgstr ""
+msgstr "Show full item categories in tables"
 
 #: common/setting/user.py:269
 msgid "Disabled: The full category path is displayed as a hover tooltip. Enabled: The full category path is displayed as plain text."
@@ -4261,7 +4261,7 @@ msgstr ""
 
 #: common/setting/user.py:294
 msgid "Automatically default to showing items/parts instead of sub-levels for locations or categories with no children"
-msgstr ""
+msgstr "Automatically default to showing items instead of sub-levels for locations or categories with no children"
 
 #: common/validators.py:40
 msgid "All models"
@@ -4418,7 +4418,7 @@ msgstr ""
 
 #: company/models.py:212
 msgid "Does this company manufacture parts?"
-msgstr ""
+msgstr "Does this company manufacture the items?"
 
 #: company/models.py:220
 msgid "Default currency used for this company"
@@ -4557,7 +4557,7 @@ msgstr ""
 
 #: company/models.py:564
 msgid "Manufacturer part description"
-msgstr ""
+msgstr "Manufacturer item description"
 
 #: company/models.py:692
 msgid "Pack units must be compatible with the base part units"
@@ -4609,7 +4609,7 @@ msgstr ""
 
 #: company/models.py:820
 msgid "Supplier part description"
-msgstr ""
+msgstr "Supplier item description"
 
 #: company/models.py:836 part/models.py:2229
 msgid "base cost"
@@ -5378,7 +5378,7 @@ msgstr ""
 
 #: order/models.py:1183
 msgid "Serial numbers cannot be assigned to virtual parts"
-msgstr ""
+msgstr "Serial numbers cannot be assigned to virtual items"
 
 #: order/models.py:1397
 msgid "Allow any stock (serialized or unserialized)"
@@ -5567,7 +5567,7 @@ msgstr ""
 
 #: order/models.py:2554
 msgid "Only salable parts can be assigned to a sales order"
-msgstr ""
+msgstr "Only salable items can be assigned to a sales order"
 
 #: order/models.py:2580
 msgid "Sale Price"
@@ -5915,7 +5915,7 @@ msgstr ""
 
 #: order/serializers.py:779
 msgid "Internal Part Name"
-msgstr ""
+msgstr "Internal Item Name"
 
 #: order/serializers.py:795
 msgid "Supplier part must be specified"
@@ -6300,11 +6300,11 @@ msgstr ""
 #: part/models.py:93 part/models.py:414
 #: templates/email/part_event_notification.html:16
 msgid "Part Category"
-msgstr ""
+msgstr "Item Category"
 
 #: part/models.py:94 users/ruleset.py:29
 msgid "Part Categories"
-msgstr ""
+msgstr "Item Categories"
 
 #: part/models.py:112 part/models.py:1195
 msgid "Default Location"
@@ -6312,7 +6312,7 @@ msgstr ""
 
 #: part/models.py:113
 msgid "Default location for parts in this category"
-msgstr ""
+msgstr "Default location for items in this category"
 
 #: part/models.py:118 stock/models.py:206
 msgid "Structural"
@@ -6320,7 +6320,7 @@ msgstr ""
 
 #: part/models.py:120
 msgid "Parts may not be directly assigned to a structural category, but may be assigned to child categories."
-msgstr ""
+msgstr "Items may not be directly assigned to a structural category, but may be assigned to child categories."
 
 #: part/models.py:129
 msgid "Default keywords"
@@ -6328,7 +6328,7 @@ msgstr ""
 
 #: part/models.py:130
 msgid "Default keywords for parts in this category"
-msgstr ""
+msgstr "Default keywords for items in this category"
 
 #: part/models.py:137 stock/models.py:102 stock/models.py:188
 msgid "Icon"
@@ -6341,7 +6341,7 @@ msgstr ""
 
 #: part/models.py:182
 msgid "You cannot make this part category structural because some parts are already assigned to it!"
-msgstr ""
+msgstr "You cannot make this part category structural because some items are already assigned to it!"
 
 #: part/models.py:370
 msgid "Part Category Parameter Template"
@@ -6432,11 +6432,11 @@ msgstr ""
 
 #: part/models.py:1077
 msgid "Parts cannot be assigned to structural part categories!"
-msgstr ""
+msgstr "Items cannot be assigned to structural item categories"
 
 #: part/models.py:1109
 msgid "Part name"
-msgstr ""
+msgstr "Item Name"
 
 #: part/models.py:1114
 msgid "Is Template"
@@ -6456,7 +6456,7 @@ msgstr ""
 
 #: part/models.py:1133
 msgid "Part description (optional)"
-msgstr ""
+msgstr "Item description (optional)"
 
 #: part/models.py:1140
 msgid "Keywords"
@@ -6468,7 +6468,7 @@ msgstr ""
 
 #: part/models.py:1151
 msgid "Part category"
-msgstr ""
+msgstr "Item category"
 
 #: part/models.py:1158 part/serializers.py:814
 #: report/templates/report/inventree_stock_location_report.html:103
@@ -6529,7 +6529,7 @@ msgstr ""
 
 #: part/models.py:1272
 msgid "Can this part be used to build other parts?"
-msgstr ""
+msgstr "Can this item be used to build other items?"
 
 #: part/models.py:1278
 msgid "Does this part have tracking for unique items?"
@@ -6553,7 +6553,7 @@ msgstr ""
 
 #: part/models.py:1306
 msgid "Locked parts cannot be edited"
-msgstr ""
+msgstr "Locked items cannot be edited"
 
 #: part/models.py:1312
 msgid "Is this a virtual part, such as a software product or license?"
@@ -6970,7 +6970,7 @@ msgstr ""
 
 #: part/models.py:4160 stock/models.py:1064
 msgid "Quantity must be integer value for trackable parts"
-msgstr ""
+msgstr "Quantity must be integer value for trackable items"
 
 #: part/models.py:4170 part/models.py:4172
 msgid "Sub part must be specified"
@@ -7026,11 +7026,11 @@ msgstr ""
 
 #: part/serializers.py:72
 msgid "Delete Parts"
-msgstr ""
+msgstr "Delete Items"
 
 #: part/serializers.py:73
 msgid "Delete all parts contained within this category"
-msgstr ""
+msgstr "Delete all items contained within this category"
 
 #: part/serializers.py:130
 msgid "Parent Category"
@@ -7038,7 +7038,7 @@ msgstr ""
 
 #: part/serializers.py:131
 msgid "Parent part category"
-msgstr ""
+msgstr "Parent item category"
 
 #: part/serializers.py:139 part/serializers.py:204
 msgid "Subcategories"
@@ -7205,7 +7205,7 @@ msgstr ""
 
 #: part/serializers.py:1006
 msgid "Copy parameter templates from selected part category"
-msgstr ""
+msgstr "Copy parameter templates from selected item category"
 
 #: part/serializers.py:1011
 msgid "Existing Image"
@@ -7249,19 +7249,19 @@ msgstr ""
 
 #: part/serializers.py:1296
 msgid "Part Description"
-msgstr ""
+msgstr "Item Description"
 
 #: part/serializers.py:1340
 msgid "Select a part to generate stocktake information for that part (and any variant parts)"
-msgstr ""
+msgstr "Select a item to generate stocktake information for that part (and any variant items)"
 
 #: part/serializers.py:1350
 msgid "Select a category to include all parts within that category (and subcategories)"
-msgstr ""
+msgstr "Select a category to include all items within that category (and subcategories)"
 
 #: part/serializers.py:1360
 msgid "Select a location to include all parts with stock in that location (including sub-locations)"
-msgstr ""
+msgstr "Select a location to include all items with sotck in that location (including sub-locations)"
 
 #: part/serializers.py:1367
 msgid "Generate Stocktake Entries"
@@ -7269,7 +7269,7 @@ msgstr ""
 
 #: part/serializers.py:1368
 msgid "Save stocktake entries for the selected parts"
-msgstr ""
+msgstr "Save stocktake entries for the selected items"
 
 #: part/serializers.py:1375
 msgid "Generate Report"
@@ -7277,7 +7277,7 @@ msgstr ""
 
 #: part/serializers.py:1376
 msgid "Generate a stocktake report for the selected parts"
-msgstr ""
+msgstr "Generate a stocktake report for the selected items"
 
 #: part/serializers.py:1481
 msgid "Minimum Price"
@@ -7944,7 +7944,7 @@ msgstr ""
 
 #: plugin/builtin/exporter/stocktake_exporter.py:38
 msgid "Exclude parts with zero stock from the exported dataset"
-msgstr ""
+msgstr "Exclude items with zero stock from the exported dataset"
 
 #: plugin/builtin/exporter/stocktake_exporter.py:50
 msgid "Part Stocktake Exporter"
@@ -8941,15 +8941,15 @@ msgstr ""
 
 #: stock/api.py:656
 msgid "Part name (case insensitive)"
-msgstr ""
+msgstr "Item name (case insensitive)"
 
 #: stock/api.py:662
 msgid "Part name contains (case insensitive)"
-msgstr ""
+msgstr "Item name contains (case insensitive)"
 
 #: stock/api.py:668
 msgid "Part name (regex)"
-msgstr ""
+msgstr "Item name (regex)"
 
 #: stock/api.py:673
 msgid "Part IPN (case insensitive)"
@@ -9179,7 +9179,7 @@ msgstr ""
 
 #: stock/models.py:1070 stock/serializers.py:478
 msgid "Stock item cannot be created for virtual parts"
-msgstr ""
+msgstr "Stock item cannot be created for virtual items"
 
 #: stock/models.py:1087
 #, python-brace-format
@@ -9749,7 +9749,7 @@ msgstr ""
 
 #: stock/serializers.py:1760
 msgid "Allow stock items with different supplier parts to be merged"
-msgstr ""
+msgstr "Allow stock items with different supplier items to be merged"
 
 #: stock/serializers.py:1765
 msgid "Allow mismatched status"
@@ -10056,7 +10056,7 @@ msgstr ""
 
 #: templates/email/build_order_required_stock.html:14
 msgid "The following parts are low on required stock"
-msgstr ""
+msgstr "The following items are low on required stock"
 
 #: templates/email/build_order_required_stock.html:18
 msgid "Required Quantity"
@@ -10091,7 +10091,7 @@ msgstr ""
 
 #: templates/email/stale_stock_notification.html:57
 msgid "You are receiving this email because you are subscribed to notifications for these parts"
-msgstr ""
+msgstr "You are receiving this email because you are subscribed to notifications for these items"
 
 #: users/admin.py:101
 msgid "Users"

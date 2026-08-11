@@ -111,6 +111,10 @@ export default function useDataExport({
     title: t`Export Data`,
     method: 'POST',
     fields: exportFields,
+    initialData: {
+      export_format: 'csv',
+      export_plugin: 'inventree-exporter'
+    },
     submitText: t`Export`,
     successMessage: null,
     timeout: 30 * 1000,

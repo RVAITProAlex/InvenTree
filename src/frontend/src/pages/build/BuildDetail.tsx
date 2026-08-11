@@ -293,7 +293,7 @@ export default function BuildDetail() {
         label: t`Purchase Orders`,
         icon: <IconShoppingCart />,
         content: build.pk ? (
-          <PurchaseOrderTable params={{ build: build.pk }} />
+          <PurchaseOrderTable externalBuildId={build.pk} />
         ) : (
           <Skeleton />
         )

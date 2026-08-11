@@ -31,6 +31,8 @@ import { useCreateApiFormModal } from '../../hooks/UseForm';
 import { useGlobalSettingsState } from '../../states/SettingsStates';
 import { useUserState } from '../../states/UserState';
 import BuildOrderFilters from './BuildOrderFilters';
+import { useNavigate } from 'react-router-dom';
+
 
 /*
  * Construct a table of build orders, according to the provided parameters
@@ -44,6 +46,7 @@ export function BuildOrderTable({
   parentBuildId?: number;
   salesOrderId?: number;
 }>) {
+  const navigate = useNavigate();
   const globalSettings = useGlobalSettingsState();
   const table = useTable(!!partId ? 'buildorder-part' : 'buildorder-index', {
     initialFilters: [
@@ -154,6 +157,11 @@ export function BuildOrderTable({
       parent: parentBuildId
     },
     follow: true,
+    onFormSuccess: (response: any) => {
+      if (response?.pk) {
+        navigate(`/projects/${response.pk}/`);
+      }
+    },
     modelType: ModelType.build,
     keepOpenOption: true
   });

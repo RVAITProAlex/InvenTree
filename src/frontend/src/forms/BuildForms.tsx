@@ -140,7 +140,7 @@ export function useBuildOrderFields({
       // Hidden fields required by backend API validation
       part: {
         hidden: true,
-        value: 1
+        value: 3
       },
       quantity: {
         hidden: true,

@@ -234,8 +234,6 @@ export default function BuildDetail() {
         hidden: true
       },
       part: {
-        model_type: ModelType.part,
-        api_url: apiUrl(ApiEndpoints.part_list),
         required: true,
         filters: {
           active: true

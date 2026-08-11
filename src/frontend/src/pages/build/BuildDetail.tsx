@@ -1,5 +1,5 @@
 import { t } from '@lingui/core/macro';
-import { Alert, Skeleton, Stack, Text } from '@mantine/core';
+import { Alert, Button, Group, Skeleton, Stack, Text, Title } from '@mantine/core';
 import {
   IconChecklist,
   IconCircleCheck,
@@ -10,6 +10,8 @@ import {
   IconList,
   IconListCheck,
   IconListNumbers,
+  IconPaperclip,
+  IconPlus,
   IconShoppingCart,
   IconSitemap
 } from '@tabler/icons-react';
@@ -102,10 +104,6 @@ function BuildLinesPanel({
     return <Skeleton w={'100%'} h={400} animate />;
   }
 
-  if (!hasItems) {
-    return <NoItems />;
-  }
-
   return (
     <Stack gap='xs'>
       {bomInformation?.isLoaded &&
@@ -175,7 +173,6 @@ export default function BuildDetail() {
     });
 
   // Fetch the number of assembled BOM items associated with the build order
-  // i.e. how many items are subassemblies?
   const { instance: subassemblyLineData } = useInstance({
     endpoint: ApiEndpoints.build_line_list,
     params: {
@@ -204,11 +201,6 @@ export default function BuildDetail() {
     defaultValue: {}
   });
 
-  /**
-   * Display the "Child Build Orders" panel if either:
-   * - There are any child build orders (childBuildData.count > 0)
-   * - There are any sub-assembly items (subassemblyLineData.count > 0)
-   */
   const showChildBuilds = useMemo(() => {
     return childBuildData?.count > 0 || subassemblyLineData?.count > 0;
   }, [childBuildData, subassemblyLineData]);
@@ -231,11 +223,39 @@ export default function BuildDetail() {
     refetchOnMount: true
   });
 
+  // Modal to manually add inventory items to this Project/Build Order
+  const newRequiredPart = useCreateApiFormModal({
+    url: ApiEndpoints.build_line_list,
+    method: 'POST',
+    title: t`Add Required Part`,
+    fields: {
+      build: {
+        value: id,
+        hidden: true
+      },
+      part: {
+        required: true,
+        filters: {
+          active: true
+        }
+      },
+      quantity: {
+        required: true,
+        default: 1
+      }
+    },
+    successMessage: t`Required part added to project`,
+    onFormSuccess: () => {
+      buildLineQuery.refetch();
+      refreshInstance();
+    }
+  });
+
   const buildPanels: PanelType[] = useMemo(() => {
     return [
       {
         name: 'details',
-        label: t`Build Details`,
+        label: t`Project Info`,
         icon: <IconInfoCircle />,
         content: (
           <BuildOrderDetailsPanel
@@ -250,115 +270,34 @@ export default function BuildDetail() {
         label: t`Required Parts`,
         icon: <IconListNumbers />,
         content: (
-          <BuildLinesPanel
-            build={build}
-            isLoading={buildLineQuery.isFetching || buildLineQuery.isLoading}
-            hasItems={buildLineData?.count > 0}
-          />
+          <Stack gap='md'>
+            <Group justify='space-between'>
+              <Title order={4}>{t`Required Parts`}</Title>
+              <Button
+                leftSection={<IconPlus size={16} />}
+                onClick={() => newRequiredPart.open()}
+              >
+                {t`Add Required Part`}
+              </Button>
+            </Group>
+            <BuildLinesPanel
+              build={build}
+              isLoading={buildLineQuery.isFetching || buildLineQuery.isLoading}
+              hasItems={buildLineData?.count > 0}
+            />
+          </Stack>
         )
       },
       {
-        name: 'allocated-stock',
-        label: t`Allocated Stock`,
-        icon: <IconList />,
-        hidden:
-          build.status == buildStatus.COMPLETE ||
-          build.status == buildStatus.CANCELLED ||
-          (buildLineData?.count ?? 0) <= 0, // Hide if no required parts
-        content: (
-          <BuildAllocationsPanel
-            build={build}
-            isLoading={buildLineQuery.isFetching || buildLineQuery.isLoading}
-            hasItems={buildLineData?.count > 0}
-          />
-        )
-      },
-      {
-        name: 'consumed-stock',
-        label: t`Consumed Stock`,
-        icon: <IconListCheck />,
-        hidden: (buildLineData?.count ?? 0) <= 0, // Hide if no required parts
-        content: (
-          <StockItemTable
-            allowAdd={false}
-            tableName='build-consumed'
-            showLocation={false}
-            allowReturn
-            defaultInStock={null}
-            params={{
-              consumed_by: id
-            }}
-          />
-        )
-      },
-      {
-        name: 'incomplete-outputs',
-        label: t`Incomplete Outputs`,
-        icon: <IconClipboardList />,
-        content: build.pk ? (
-          <BuildOutputTable build={build} refreshBuild={refreshInstance} />
-        ) : (
-          <Skeleton />
-        ),
-        hidden:
-          build.status == buildStatus.COMPLETE ||
-          build.status == buildStatus.CANCELLED
-      },
-      {
-        name: 'complete-outputs',
-        label: t`Completed Outputs`,
-        icon: <IconClipboardCheck />,
-        content: (
-          <StockItemTable
-            allowAdd={false}
-            tableName='completed-build-outputs'
-            params={{
-              build: id,
-              is_building: false
-            }}
-          />
-        )
-      },
-      {
-        name: 'external-purchase-orders',
-        label: t`External Orders`,
+        name: 'purchase-orders',
+        label: t`Purchase Orders`,
         icon: <IconShoppingCart />,
         content: build.pk ? (
-          <PurchaseOrderTable externalBuildId={build.pk} />
-        ) : (
-          <Skeleton />
-        ),
-        hidden:
-          !user.hasViewRole(UserRoles.purchase_order) ||
-          !build.external ||
-          !globalSettings.isSet('BUILDORDER_EXTERNAL_BUILDS')
-      },
-      {
-        name: 'child-orders',
-        label: t`Child Build Orders`,
-        icon: <IconSitemap />,
-        hidden: !showChildBuilds,
-        content: build.pk ? (
-          <BuildOrderTable parentBuildId={build.pk} />
+          <PurchaseOrderTable params={{ build: build.pk }} />
         ) : (
           <Skeleton />
         )
       },
-      {
-        name: 'test-results',
-        label: t`Test Results`,
-        icon: <IconChecklist />,
-        hidden: !build.part_detail?.testable,
-        content: build.pk ? (
-          <PartTestResultTable buildId={build.pk} partId={build.part} />
-        ) : (
-          <Skeleton />
-        )
-      },
-      ParametersPanel({
-        model_type: ModelType.build,
-        model_id: build.pk
-      }),
       AttachmentPanel({
         model_type: ModelType.build,
         model_id: build.pk
@@ -373,13 +312,13 @@ export default function BuildDetail() {
     build,
     id,
     user,
-
     buildStatus,
     globalSettings,
     showChildBuilds,
     buildLineQuery.isFetching,
     buildLineQuery.isLoading,
-    buildLineData
+    buildLineData,
+    newRequiredPart
   ]);
 
   const editBuildOrderFields = useBuildOrderFields({
@@ -399,9 +338,6 @@ export default function BuildDetail() {
 
   const duplicateBuildOrderInitialData = useMemo(() => {
     const data = { ...build };
-    // if we set the reference to null/undefined, it will be left blank in the form
-    // if we omit the reference altogether, it will be auto-generated via reference pattern
-    // from the OPTIONS response
     delete data.reference;
     return data;
   }, [build]);
@@ -581,6 +517,7 @@ export default function BuildDetail() {
       {holdOrder.modal}
       {issueOrder.modal}
       {completeOrder.modal}
+      {newRequiredPart.modal}
       <InstanceDetail query={instanceQuery} requiredRole={UserRoles.build}>
         <Stack gap='xs'>
           <PageDetail

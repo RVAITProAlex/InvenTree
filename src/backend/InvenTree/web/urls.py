@@ -62,10 +62,10 @@ def cui_compatibility_urls(base: str) -> list:
                 re_path(
                     r'^(?P<pk>\d+)/',
                     RedirectView.as_view(
-                        url=f'/{base}/manufacturing/build-order/%(pk)s'
+                        url=f'/{base}/projects/build-order/%(pk)s'
                     ),
                 ),
-                re_path('.*', RedirectView.as_view(url=f'/{base}/manufacturing/')),
+                re_path('.*', RedirectView.as_view(url=f'/{base}/projects/')),
             ]),
         ),
         # "Order" app views

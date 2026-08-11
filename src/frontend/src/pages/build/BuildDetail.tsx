@@ -234,6 +234,8 @@ export default function BuildDetail() {
         hidden: true
       },
       part: {
+        field_type: 'related field',
+        model: ModelType.part,
         required: true,
         filters: {
           active: true

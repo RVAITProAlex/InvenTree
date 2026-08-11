@@ -158,8 +158,8 @@ export const ModelInformationDict: ModelDict = {
   build: {
     label: () => t`Build Order`,
     label_multiple: () => t`Build Orders`,
-    url_overview: '/manufacturing/index/buildorders/',
-    url_detail: '/manufacturing/build-order/:pk/',
+    url_overview: '/projects/index/buildorders/',
+    url_detail: '/projects/build-order/:pk/',
     api_endpoint: ApiEndpoints.build_order_list,
     admin_url: '/build/build/',
     supports_barcode: true,

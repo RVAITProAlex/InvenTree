@@ -109,7 +109,7 @@ export default function useDataExport({
     url: url,
     queryParams: new URLSearchParams(exportParams),
     title: t`Export Data`,
-    method: 'GET',
+    method: 'POST',
     fields: exportFields,
     submitText: t`Export`,
     successMessage: null,

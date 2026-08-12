@@ -11,6 +11,7 @@ import {
   Title
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { notifications } from '@mantine/notifications';
 import {
   IconChecklist,
   IconCircleCheck,
@@ -27,8 +28,6 @@ import {
   IconSitemap
 } from '@tabler/icons-react';
 import { useMemo, useState } from 'react';
-import { notifications } from '@mantine/notifications';
-import { showApiErrorMessage } from '../../functions/notifications';
 import { useParams } from 'react-router-dom';
 
 import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
@@ -60,6 +59,7 @@ import { StatusRenderer } from '../../components/render/StatusRenderer';
 import { RenderStockLocation } from '../../components/render/Stock';
 import { useApi } from '../../contexts/ApiContext';
 import { useBuildOrderFields } from '../../forms/BuildForms';
+import { showApiErrorMessage } from '../../functions/notifications';
 import {
   useCreateApiFormModal,
   useEditApiFormModal
@@ -245,23 +245,7 @@ export default function BuildDetail() {
     refetchOnMount: true
   });
 
-  const waitForBuildLinesToUpdate = async () => {
-    for (let attempt = 0; attempt < 8; attempt += 1) {
-      const response = await buildLineQuery.refetch();
-      const data = response?.data ?? buildLineData ?? {};
-      const count = data?.count ?? (Array.isArray(data) ? data.length : 0);
-
-      if (count > 0) {
-        return true;
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-
-    return false;
-  };
-
-  // Batch-add selected catalog parts to project build lines
+  // Batch-add selected catalog parts directly to project build lines
   const handleAddSelectedParts = async () => {
     if (selectedPartIds.length === 0) return;
     setIsSubmittingParts(true);
@@ -269,17 +253,11 @@ export default function BuildDetail() {
     const partsToAdd = [...selectedPartIds];
 
     try {
-      const assemblyPartId = build?.part;
-
-      if (!assemblyPartId) {
-        throw new Error(t`Build assembly part is missing`);
-      }
-
       const results = await Promise.all(
         partsToAdd.map((partId) =>
-          api.post(ApiEndpoints.bom_list, {
-            part: assemblyPartId,
-            sub_part: partId,
+          api.post(ApiEndpoints.build_line_list, {
+            build: id,
+            part: partId,
             quantity: 1
           })
         )
@@ -304,13 +282,7 @@ export default function BuildDetail() {
       setSelectedPartIds([]);
       closeCatalogModal();
 
-      // Build line rows are derived from BOM changes and are updated in the background.
-      // Poll the list briefly so the UI catches up once the async build-line refresh completes.
-      const updated = await waitForBuildLinesToUpdate();
-      if (!updated) {
-        await buildLineQuery.refetch();
-      }
-
+      await buildLineQuery.refetch();
       refreshInstance();
     } catch (err) {
       console.error('Failed to add parts to project:', err);
@@ -365,7 +337,12 @@ export default function BuildDetail() {
         label: t`Purchase Orders`,
         icon: <IconShoppingCart />,
         content: build.pk ? (
-          <PurchaseOrderTable externalBuildId={build.pk} />
+          <PurchaseOrderTable
+            params={{
+              project_code: build.reference,
+              outstanding: true
+            }}
+          />
         ) : (
           <Skeleton />
         )
@@ -590,7 +567,7 @@ export default function BuildDetail() {
       {issueOrder.modal}
       {completeOrder.modal}
 
-{/* Interactive Catalog Multi-Selection Modal */}
+      {/* Interactive Catalog Multi-Selection Modal */}
       <Modal
         opened={catalogModalOpened}
         onClose={closeCatalogModal}
@@ -616,7 +593,10 @@ export default function BuildDetail() {
                 onRowSelectionChange: (selectedState: any) => {
                   if (Array.isArray(selectedState)) {
                     setSelectedPartIds(selectedState.map((r) => r.pk ?? r.id));
-                  } else if (typeof selectedState === 'object' && selectedState !== null) {
+                  } else if (
+                    typeof selectedState === 'object' &&
+                    selectedState !== null
+                  ) {
                     const activeIds = Object.keys(selectedState)
                       .filter((key) => selectedState[key])
                       .map(Number)

@@ -593,14 +593,15 @@ export default function BuildDetail() {
                 onSelectionChange: (selectedRows: any[]) => {
                   if (Array.isArray(selectedRows)) {
                     const ids = selectedRows
-                      .map((r) => r.original?.pk ?? r.pk ?? r.id)
-                      .filter(Boolean);
+                      .map((r) => r.original?.pk ?? r.pk ?? r.pk)
+                      .filter((id): id is number => typeof id === 'number' && !isNaN(id));
                     setSelectedPartIds(ids);
                   }
                 },
                 onRowSelectionChange: (selectedState: any) => {
                   if (Array.isArray(selectedState)) {
-                    setSelectedPartIds(selectedState.map((r) => r.pk ?? r.id));
+                    const ids = selectedState.map((r) => r.pk ?? r.id).filter((id): id is number => typeof id === 'number' && !isNaN(id));
+                    setSelectedPartIds(ids);
                   } else if (
                     typeof selectedState === 'object' &&
                     selectedState !== null

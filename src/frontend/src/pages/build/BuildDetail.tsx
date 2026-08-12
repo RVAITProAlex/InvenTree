@@ -547,41 +547,30 @@ export default function BuildDetail() {
         <Stack gap='md'>
           <ScrollArea h={500}>
             <PartListTable
+              allowAdd={false}
+              enableReports={false}
+              enableLabels={false}
               props={{
                 enableSelection: true,
-                
-                // Force-hide all toolbar action icons
-                allowAdd: false,
-                enableAdd: false,
-                enableReports: false,
-                enableLabels: false,
-                enableDownload: false,
-                enableBulkDelete: false,
-                enableMassDelete: false,
-                tableActions: [],
-                customActionGroups: [],
-                
-                // Catch all possible InvenTree selection state variations
-                onRowSelectionChange: (data: any) => {
-                  if (Array.isArray(data)) {
-                    // If it returns an array of row objects
-                    setSelectedPartIds(data.map((r: any) => r.pk ?? r.id));
-                  } else if (typeof data === 'object' && data !== null) {
-                    // If it returns a Tanstack state object like { "123": true, "124": false }
-                    const selectedKeys = Object.keys(data)
-                      .filter((key) => data[key])
+                onSelectionChange: (selectedRows: any[]) => {
+                  if (Array.isArray(selectedRows)) {
+                    const ids = selectedRows
+                      .map((r) => r.original?.pk ?? r.pk ?? r.id)
+                      .filter(Boolean);
+                    setSelectedPartIds(ids);
+                  }
+                },
+                onRowSelectionChange: (selectedState: any) => {
+                  if (Array.isArray(selectedState)) {
+                    setSelectedPartIds(selectedState.map((r) => r.pk ?? r.id));
+                  } else if (typeof selectedState === 'object' && selectedState !== null) {
+                    const activeIds = Object.keys(selectedState)
+                      .filter((key) => selectedState[key])
                       .map(Number)
                       .filter((n) => !isNaN(n));
-                    setSelectedPartIds(selectedKeys);
+                    setSelectedPartIds(activeIds);
                   }
                 },
-                // Fallback for older InvenTree table versions
-                onSelectedRecords: (records: any[]) => {
-                  if (Array.isArray(records)) {
-                    setSelectedPartIds(records.map((r: any) => r.pk ?? r.id));
-                  }
-                },
-                
                 params: {
                   active: true
                 }

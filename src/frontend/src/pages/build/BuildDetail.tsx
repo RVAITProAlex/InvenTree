@@ -542,30 +542,32 @@ export default function BuildDetail() {
         opened={catalogModalOpened}
         onClose={closeCatalogModal}
         title={t`Select Required Parts from Catalog`}
-        size='80%'
+        size="80%"
       >
-        <Stack gap='md'>
+        <Stack gap="md">
           <ScrollArea h={500}>
             <PartListTable
-              enableSelection={true}
-              onSelectionChange={(selectedRows: any[]) => {
-                setSelectedPartIds(selectedRows.map((r) => r.pk));
-              }}
-              params={{
-                active: true
-              }}
+              props={{
+                enableSelection: true,
+                onRowSelectionChange: (selectedRows: any[]) => {
+                  setSelectedPartIds(selectedRows.map((r) => r.pk));
+                },
+                params: {
+                  active: true
+                }
+              } as any}
             />
           </ScrollArea>
-          <Group justify='space-between' mt='md'>
-            <Text size='sm'>
+          <Group justify="space-between" mt="md">
+            <Text size="sm">
               {selectedPartIds.length} {t`parts selected`}
             </Text>
             <Group>
-              <Button variant='default' onClick={closeCatalogModal}>
+              <Button variant="default" onClick={closeCatalogModal}>
                 {t`Cancel`}
               </Button>
               <Button
-                color='green'
+                color="green"
                 disabled={selectedPartIds.length === 0}
                 loading={isSubmittingParts}
                 onClick={handleAddSelectedParts}
@@ -576,7 +578,7 @@ export default function BuildDetail() {
           </Group>
         </Stack>
       </Modal>
-
+      
       <InstanceDetail query={instanceQuery} requiredRole={UserRoles.build}>
         <Stack gap='xs'>
           <PageDetail

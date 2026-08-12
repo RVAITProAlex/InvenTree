@@ -245,7 +245,7 @@ export default function BuildDetail() {
     refetchOnMount: true
   });
 
-  // Batch-add selected catalog parts directly to project build lines
+  // Batch-add selected catalog parts to the build assembly's BOM
   const handleAddSelectedParts = async () => {
     if (selectedPartIds.length === 0) return;
     setIsSubmittingParts(true);
@@ -253,11 +253,17 @@ export default function BuildDetail() {
     const partsToAdd = [...selectedPartIds];
 
     try {
+      const assemblyPartId = build?.part;
+
+      if (!assemblyPartId) {
+        throw new Error(t`Build order is missing parent assembly part ID`);
+      }
+
       const results = await Promise.all(
         partsToAdd.map((partId) =>
-          api.post(ApiEndpoints.build_line_list, {
-            build: id,
-            part: partId,
+          api.post(ApiEndpoints.bom_list, {
+            part: assemblyPartId,
+            sub_part: partId,
             quantity: 1
           })
         )

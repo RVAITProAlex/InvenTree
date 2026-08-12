@@ -261,7 +261,7 @@ export default function BuildDetail() {
 
       const results = await Promise.all(
         partsToAdd.map((partId) =>
-          api.post(ApiEndpoints.bom_list, {
+          api.post(apiUrl(ApiEndpoints.bom_list), {
             part: assemblyPartId,
             sub_part: partId,
             quantity: 1

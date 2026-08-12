@@ -573,64 +573,62 @@ export default function BuildDetail() {
       {issueOrder.modal}
       {completeOrder.modal}
 
-{/* Interactive Catalog Multi-Selection Modal */}
-      <Modal
-        opened={catalogModalOpened}
-        onClose={() => {
-          setSelectedPartIds([]);
-          closeCatalogModal();
-        }}
-        title={t`Select Required Parts from Catalog`}
-        size='85%'
-      >
-        <Stack gap='md'>
-          <ScrollArea h={500}>
-            <PartListTable
-              allowAdd={false}
-              enableReports={false}
-              enableLabels={false}
-              props={{
-                enableSelection: true,
-                onSelectedStateChange: (selectedRows: any[]) => {
-                  if (Array.isArray(selectedRows)) {
-                    const ids = selectedRows
-                      .map((r) => r.pk ?? r.id)
-                      .filter((id): id is number => typeof id === 'number' && !isNaN(id));
-                    setSelectedPartIds(ids);
-                  }
-                },
-                params: {
-                  active: true
-                }
-              } as any}
-            />
-          </ScrollArea>
-          <Group justify='space-between' mt='md'>
-            <Text size='sm' fw={500}>
-              {selectedPartIds.length} {t`parts selected`}
-            </Text>
-            <Group>
-              <Button
-                variant='default'
-                onClick={() => {
-                  setSelectedPartIds([]);
-                  closeCatalogModal();
-                }}
-              >
-                {t`Cancel`}
-              </Button>
-              <Button
-                color='green'
-                disabled={selectedPartIds.length === 0}
-                loading={isSubmittingParts}
-                onClick={handleAddSelectedParts}
-              >
-                {t`Add Selected Parts (${selectedPartIds.length})`}
-              </Button>
-            </Group>
-          </Group>
-        </Stack>
-      </Modal>
+  {/* Interactive Catalog Multi-Selection Modal */}
+    <Modal
+    opened={catalogModalOpened}
+    onClose={() => {
+      setSelectedPartIds([]);
+      closeCatalogModal();
+    }}
+    title={t`Select Required Items from Catalog`}
+    size='85%'
+    >
+    <Stack gap='md'>
+      <ScrollArea h={500}>
+        <PartListTable
+          allowAdd={false}
+          enableReports={false}
+          enableLabels={false}
+          enableSelection={true}
+          onSelectedStateChange={(selectedRows: any[]) => {
+            if (Array.isArray(selectedRows)) {
+              const ids = selectedRows
+                .map((r) => r.pk ?? r.id)
+                .filter((id): id is number => typeof id === 'number' && !isNaN(id));
+              setSelectedPartIds(ids);
+            }
+          }}
+          params={{
+            active: true
+          }}
+        />
+      </ScrollArea>
+      <Group justify='space-between' mt='md'>
+        <Text size='sm' fw={500}>
+          {selectedPartIds.length} {t`items selected`}
+        </Text>
+        <Group>
+          <Button
+            variant='default'
+            onClick={() => {
+              setSelectedPartIds([]);
+              closeCatalogModal();
+            }}
+          >
+            {t`Cancel`}
+          </Button>
+          <Button
+            color='green'
+            disabled={selectedPartIds.length === 0}
+            loading={isSubmittingParts}
+            onClick={handleAddSelectedParts}
+          >
+            {t`Add Selected Items (${selectedPartIds.length})`}
+          </Button>
+        </Group>
+      </Group>
+    </Stack>
+    </Modal>
 
       <InstanceDetail query={instanceQuery} requiredRole={UserRoles.build}>
         <Stack gap='xs'>

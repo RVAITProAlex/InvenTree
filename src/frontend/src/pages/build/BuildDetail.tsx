@@ -575,7 +575,7 @@ export default function BuildDetail() {
       {issueOrder.modal}
       {completeOrder.modal}
 
-      {/* Interactive Catalog Multi-Selection Modal */}
+{/* Interactive Catalog Multi-Selection Modal */}
       <Modal
         opened={catalogModalOpened}
         onClose={closeCatalogModal}
@@ -593,24 +593,44 @@ export default function BuildDetail() {
                 onSelectionChange: (selectedRows: any[]) => {
                   if (Array.isArray(selectedRows)) {
                     const ids = selectedRows
-                      .map((r) => r.original?.pk ?? r.pk ?? r.pk)
+                      .map((r) => r.original?.pk ?? r.pk)
                       .filter((id): id is number => typeof id === 'number' && !isNaN(id));
                     setSelectedPartIds(ids);
                   }
                 },
-                onRowSelectionChange: (selectedState: any) => {
+                onRowSelectionChange: (selectedState: any, table: any) => {
+                  // If passed array of row objects directly
                   if (Array.isArray(selectedState)) {
-                    const ids = selectedState.map((r) => r.pk ?? r.id).filter((id): id is number => typeof id === 'number' && !isNaN(id));
+                    const ids = selectedState
+                      .map((r) => r.original?.pk ?? r.pk)
+                      .filter((id): id is number => typeof id === 'number' && !isNaN(id));
                     setSelectedPartIds(ids);
-                  } else if (
-                    typeof selectedState === 'object' &&
-                    selectedState !== null
-                  ) {
-                    const activeIds = Object.keys(selectedState)
-                      .filter((key) => selectedState[key])
-                      .map(Number)
-                      .filter((n) => !isNaN(n));
-                    setSelectedPartIds(activeIds);
+                    return;
+                  }
+
+                  // If passed TanStack selection map object { "37": true }, lookup actual row model
+                  if (typeof selectedState === 'object' && selectedState !== null) {
+                    let realPks: number[] = [];
+
+                    // Try retrieving actual row models from table context if available
+                    if (table?.getSelectedRowModel) {
+                      const rows = table.getSelectedRowModel().rows || [];
+                      realPks = rows
+                        .map((r: any) => r.original?.pk ?? r.original?.id)
+                        .filter((id: any): id is number => typeof id === 'number' && !isNaN(id));
+                    } else if (table?.rows) {
+                      const selectedIndices = Object.keys(selectedState).filter(
+                        (k) => selectedState[k]
+                      );
+                      realPks = selectedIndices
+                        .map((idx) => {
+                          const row = table.rows[Number(idx)];
+                          return row?.original?.pk ?? row?.pk;
+                        })
+                        .filter((id: any): id is number => typeof id === 'number' && !isNaN(id));
+                    }
+
+                    setSelectedPartIds(realPks);
                   }
                 },
                 params: {

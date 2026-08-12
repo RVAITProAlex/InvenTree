@@ -542,15 +542,40 @@ export default function BuildDetail() {
         opened={catalogModalOpened}
         onClose={closeCatalogModal}
         title={t`Select Required Parts from Catalog`}
-        size="80%"
+        size='85%'
       >
-        <Stack gap="md">
+        <Stack gap='md'>
           <ScrollArea h={500}>
             <PartListTable
               props={{
                 enableSelection: true,
+                enableBulkDelete: false,
+                enableReports: false,
+                enableLabels: false,
+                allowAdd: false,
+                tableActions: [],
                 onRowSelectionChange: (selectedRows: any[]) => {
-                  setSelectedPartIds(selectedRows.map((r) => r.pk));
+                  if (Array.isArray(selectedRows)) {
+                    setSelectedPartIds(
+                      selectedRows.map((r) => r.original?.pk ?? r.pk ?? r.id)
+                    );
+                  }
+                },
+                tableState: {
+                  onRowSelectionChange: (selectedRows: any) => {
+                    // Extract IDs whether passed as object keys or row array
+                    if (Array.isArray(selectedRows)) {
+                      setSelectedPartIds(
+                        selectedRows.map((r) => r.original?.pk ?? r.pk ?? r.id)
+                      );
+                    } else if (selectedRows && typeof selectedRows === 'object') {
+                      setSelectedPartIds(
+                        Object.keys(selectedRows)
+                          .filter((key) => selectedRows[key])
+                          .map(Number)
+                      );
+                    }
+                  }
                 },
                 params: {
                   active: true
@@ -558,16 +583,16 @@ export default function BuildDetail() {
               } as any}
             />
           </ScrollArea>
-          <Group justify="space-between" mt="md">
-            <Text size="sm">
+          <Group justify='space-between' mt='md'>
+            <Text size='sm' fw={500}>
               {selectedPartIds.length} {t`parts selected`}
             </Text>
             <Group>
-              <Button variant="default" onClick={closeCatalogModal}>
+              <Button variant='default' onClick={closeCatalogModal}>
                 {t`Cancel`}
               </Button>
               <Button
-                color="green"
+                color='green'
                 disabled={selectedPartIds.length === 0}
                 loading={isSubmittingParts}
                 onClick={handleAddSelectedParts}
@@ -578,7 +603,7 @@ export default function BuildDetail() {
           </Group>
         </Stack>
       </Modal>
-      
+
       <InstanceDetail query={instanceQuery} requiredRole={UserRoles.build}>
         <Stack gap='xs'>
           <PageDetail

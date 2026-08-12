@@ -246,11 +246,9 @@ export default function BuildDetail() {
   });
 
   // Batch-add selected catalog parts to the build assembly's BOM
- const handleAddSelectedParts = async () => {
+  const handleAddSelectedParts = async () => {
     if (selectedPartIds.length === 0) return;
     setIsSubmittingParts(true);
-
-    const partsToAdd = [...selectedPartIds];
 
     try {
       const assemblyPartId = build?.part;
@@ -260,7 +258,7 @@ export default function BuildDetail() {
       }
 
       const results = await Promise.all(
-        partsToAdd.map((partId) =>
+        selectedPartIds.map((partId) =>
           api.post(apiUrl(ApiEndpoints.bom_list), {
             part: assemblyPartId,
             sub_part: partId,
@@ -279,7 +277,7 @@ export default function BuildDetail() {
       } else {
         notifications.show({
           title: t`Parts added`,
-          message: t`${partsToAdd.length} parts added to required parts`,
+          message: t`${selectedPartIds.length} parts added to required parts`,
           color: 'green',
           id: 'add-required-parts-success'
         });
@@ -300,6 +298,7 @@ export default function BuildDetail() {
       setIsSubmittingParts(false);
     }
   };
+
   const buildPanels: PanelType[] = useMemo(() => {
     return [
       {
@@ -574,7 +573,7 @@ export default function BuildDetail() {
       {issueOrder.modal}
       {completeOrder.modal}
 
-{/* Interactive Catalog Multi-Selection Modal */}
+      {/* Interactive Catalog Multi-Selection Modal */}
       <Modal
         opened={catalogModalOpened}
         onClose={() => {
@@ -587,23 +586,20 @@ export default function BuildDetail() {
         <Stack gap='md'>
           <ScrollArea h={500}>
             <PartListTable
-              allowAdd={false}
-              enableReports={false}
-              enableLabels={false}
+              enableSelection={true}
+              onSelectedStateChange={(selectedRows: any[]) => {
+                if (Array.isArray(selectedRows)) {
+                  const ids = selectedRows
+                    .map((r) => r.pk ?? r.id)
+                    .filter((id): id is number => typeof id === 'number' && !isNaN(id));
+                  setSelectedPartIds(ids);
+                }
+              }}
               props={{
-                enableSelection: true,
-                onSelectedStateChange: (selectedRows: any[]) => {
-                  if (Array.isArray(selectedRows)) {
-                    const ids = selectedRows
-                      .map((r) => r.pk ?? r.original?.pk)
-                      .filter((id): id is number => typeof id === 'number' && !isNaN(id));
-                    setSelectedPartIds(ids);
-                  }
-                },
                 params: {
                   active: true
                 }
-              } as any}
+              }}
             />
           </ScrollArea>
           <Group justify='space-between' mt='md'>

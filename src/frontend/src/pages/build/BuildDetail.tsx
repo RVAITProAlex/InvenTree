@@ -547,40 +547,21 @@ export default function BuildDetail() {
         <Stack gap='md'>
           <ScrollArea h={500}>
             <PartListTable
-              props={{
-                enableSelection: true,
-                enableBulkDelete: false,
-                enableReports: false,
-                enableLabels: false,
-                allowAdd: false,
-                tableActions: [],
-                onRowSelectionChange: (selectedRows: any[]) => {
-                  if (Array.isArray(selectedRows)) {
-                    setSelectedPartIds(
-                      selectedRows.map((r) => r.original?.pk ?? r.pk ?? r.id)
-                    );
-                  }
-                },
-                tableState: {
-                  onRowSelectionChange: (selectedRows: any) => {
-                    // Extract IDs whether passed as object keys or row array
-                    if (Array.isArray(selectedRows)) {
-                      setSelectedPartIds(
-                        selectedRows.map((r) => r.original?.pk ?? r.pk ?? r.id)
-                      );
-                    } else if (selectedRows && typeof selectedRows === 'object') {
-                      setSelectedPartIds(
-                        Object.keys(selectedRows)
-                          .filter((key) => selectedRows[key])
-                          .map(Number)
-                      );
-                    }
-                  }
-                },
-                params: {
-                  active: true
+              enableSelection={true}
+              enableReports={false}
+              enableLabels={false}
+              enableImport={false}
+              allowAdd={false}
+              onSelectedStateChange={(selectedRows: any[]) => {
+                if (Array.isArray(selectedRows)) {
+                  setSelectedPartIds(
+                    selectedRows.map((r) => r.original?.pk ?? r.pk ?? r.id)
+                  );
                 }
-              } as any}
+              }}
+              params={{
+                active: true
+              }}
             />
           </ScrollArea>
           <Group justify='space-between' mt='md'>

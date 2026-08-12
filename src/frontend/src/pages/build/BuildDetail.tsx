@@ -547,21 +547,24 @@ export default function BuildDetail() {
         <Stack gap='md'>
           <ScrollArea h={500}>
             <PartListTable
-              enableSelection={true}
-              enableReports={false}
-              enableLabels={false}
-              enableImport={false}
-              allowAdd={false}
-              onSelectedStateChange={(selectedRows: any[]) => {
-                if (Array.isArray(selectedRows)) {
-                  setSelectedPartIds(
-                    selectedRows.map((r) => r.original?.pk ?? r.pk ?? r.id)
-                  );
+              props={{
+                enableSelection: true,
+                enableReports: false,
+                enableLabels: false,
+                enableBulkDelete: false,
+                allowAdd: false,
+                tableActions: [],
+                onSelectedStateChange: (selectedRows: any[]) => {
+                  if (Array.isArray(selectedRows)) {
+                    setSelectedPartIds(
+                      selectedRows.map((r) => r.original?.pk ?? r.pk ?? r.id)
+                    );
+                  }
+                },
+                params: {
+                  active: true
                 }
-              }}
-              params={{
-                active: true
-              }}
+              } as any}
             />
           </ScrollArea>
           <Group justify='space-between' mt='md'>

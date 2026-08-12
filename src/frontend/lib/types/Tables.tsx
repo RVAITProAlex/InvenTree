@@ -219,6 +219,8 @@ export type InvenTreeTableProps<T = any> = {
   dataFormatter?: (data: any) => any;
   rowActions?: (record: T) => RowAction[];
   detailAction?: boolean;
+  onSelectionChange?: (selectedRows: T[]) => void;
+  onRowSelectionChange?: (selectedState: Record<string, boolean>) => void;
   onRowClick?: (record: T, index: number, event: any) => void;
   onCellClick?: DataTableCellClickHandler<T>;
   modelType?: ModelType;

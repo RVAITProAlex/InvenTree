@@ -255,8 +255,26 @@ export function InvenTreeTableInternal<T extends Record<string, any>>({
   const onSelectedRecordsChange = useCallback(
     (records: any[]) => {
       tableState.setSelectedRecords(records);
+
+      if (props.onSelectionChange) {
+        props.onSelectionChange(records);
+      }
+
+      if (props.onRowSelectionChange) {
+        const selectedState: Record<string, boolean> = {};
+        const accessor = tableState.idAccessor ?? 'pk';
+
+        records.forEach((record) => {
+          const id = resolveItem(record, accessor);
+          if (id != null) {
+            selectedState[String(id)] = true;
+          }
+        });
+
+        props.onRowSelectionChange(selectedState);
+      }
     },
-    [tableState.setSelectedRecords]
+    [props.onSelectionChange, props.onRowSelectionChange, tableState.idAccessor, tableState.setSelectedRecords]
   );
 
   // Update column visibility when hiddenColumns change

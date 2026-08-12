@@ -118,12 +118,18 @@ function partTableColumns(): TableColumn[] {
  */
 export function PartListTable({
   enableImport = true,
+  allowAdd = true,
+  enableReports,
+  enableLabels,
   basePartInstance,
   props,
   tableName = 'item-list',
   defaultPartData
 }: Readonly<{
   enableImport?: boolean;
+  allowAdd?: boolean;
+  enableReports?: boolean;
+  enableLabels?: boolean;
   props?: InvenTreeTableProps;
   basePartInstance?: any;
   tableName?: string;
@@ -246,7 +252,7 @@ export function PartListTable({
   );
 
   const tableActions = useMemo(() => {
-    return [
+    const actions = [
       <ActionDropdown
         tooltip={t`Item Actions`}
         icon={<InvenTreeIcon icon='part' />}
@@ -273,16 +279,23 @@ export function PartListTable({
             }
           }
         ]}
-      />,
-      <PartCreationMenu
-        key='part-creation-menu'
-        initialData={initialPartData}
-        basePartInstance={basePartInstance}
-        enableImport={enableImport}
-        refreshRef={refreshRef}
       />
     ];
-  }, [user, enableImport, table.hasSelectedRecords]);
+
+    if (allowAdd) {
+      actions.push(
+        <PartCreationMenu
+          key='part-creation-menu'
+          initialData={initialPartData}
+          basePartInstance={basePartInstance}
+          enableImport={enableImport}
+          refreshRef={refreshRef}
+        />
+      );
+    }
+
+    return actions;
+  }, [user, enableImport, allowAdd, table.hasSelectedRecords]);
 
   return (
     <>
@@ -302,8 +315,8 @@ export function PartListTable({
           tableActions: tableActions,
           rowActions: rowActions,
           enableSelection: true,
-          enableReports: true,
-          enableLabels: true,
+          enableReports: enableReports ?? props?.enableReports ?? true,
+          enableLabels: enableLabels ?? props?.enableLabels ?? true,
           params: {
             ...props?.params,
             category_detail: true,

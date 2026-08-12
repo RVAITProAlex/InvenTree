@@ -246,7 +246,7 @@ export default function BuildDetail() {
   });
 
   // Batch-add selected catalog parts to the build assembly's BOM
-  const handleAddSelectedParts = async () => {
+ const handleAddSelectedParts = async () => {
     if (selectedPartIds.length === 0) return;
     setIsSubmittingParts(true);
 
@@ -300,7 +300,6 @@ export default function BuildDetail() {
       setIsSubmittingParts(false);
     }
   };
-
   const buildPanels: PanelType[] = useMemo(() => {
     return [
       {
@@ -578,7 +577,10 @@ export default function BuildDetail() {
 {/* Interactive Catalog Multi-Selection Modal */}
       <Modal
         opened={catalogModalOpened}
-        onClose={closeCatalogModal}
+        onClose={() => {
+          setSelectedPartIds([]);
+          closeCatalogModal();
+        }}
         title={t`Select Required Parts from Catalog`}
         size='85%'
       >
@@ -590,47 +592,12 @@ export default function BuildDetail() {
               enableLabels={false}
               props={{
                 enableSelection: true,
-                onSelectionChange: (selectedRows: any[]) => {
+                onSelectedStateChange: (selectedRows: any[]) => {
                   if (Array.isArray(selectedRows)) {
                     const ids = selectedRows
-                      .map((r) => r.original?.pk ?? r.pk)
+                      .map((r) => r.pk ?? r.original?.pk)
                       .filter((id): id is number => typeof id === 'number' && !isNaN(id));
                     setSelectedPartIds(ids);
-                  }
-                },
-                onRowSelectionChange: (selectedState: any, table: any) => {
-                  // If passed array of row objects directly
-                  if (Array.isArray(selectedState)) {
-                    const ids = selectedState
-                      .map((r) => r.original?.pk ?? r.pk)
-                      .filter((id): id is number => typeof id === 'number' && !isNaN(id));
-                    setSelectedPartIds(ids);
-                    return;
-                  }
-
-                  // If passed TanStack selection map object { "37": true }, lookup actual row model
-                  if (typeof selectedState === 'object' && selectedState !== null) {
-                    let realPks: number[] = [];
-
-                    // Try retrieving actual row models from table context if available
-                    if (table?.getSelectedRowModel) {
-                      const rows = table.getSelectedRowModel().rows || [];
-                      realPks = rows
-                        .map((r: any) => r.original?.pk ?? r.original?.id)
-                        .filter((id: any): id is number => typeof id === 'number' && !isNaN(id));
-                    } else if (table?.rows) {
-                      const selectedIndices = Object.keys(selectedState).filter(
-                        (k) => selectedState[k]
-                      );
-                      realPks = selectedIndices
-                        .map((idx) => {
-                          const row = table.rows[Number(idx)];
-                          return row?.original?.pk ?? row?.pk;
-                        })
-                        .filter((id: any): id is number => typeof id === 'number' && !isNaN(id));
-                    }
-
-                    setSelectedPartIds(realPks);
                   }
                 },
                 params: {
@@ -644,7 +611,13 @@ export default function BuildDetail() {
               {selectedPartIds.length} {t`parts selected`}
             </Text>
             <Group>
-              <Button variant='default' onClick={closeCatalogModal}>
+              <Button
+                variant='default'
+                onClick={() => {
+                  setSelectedPartIds([]);
+                  closeCatalogModal();
+                }}
+              >
                 {t`Cancel`}
               </Button>
               <Button

@@ -245,6 +245,22 @@ export default function BuildDetail() {
     refetchOnMount: true
   });
 
+  const waitForBuildLinesToUpdate = async () => {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const response = await buildLineQuery.refetch();
+      const data = response?.data ?? buildLineData ?? {};
+      const count = data?.count ?? (Array.isArray(data) ? data.length : 0);
+
+      if (count > 0) {
+        return true;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    return false;
+  };
+
   // Batch-add selected catalog parts to project build lines
   const handleAddSelectedParts = async () => {
     if (selectedPartIds.length === 0) return;
@@ -269,17 +285,14 @@ export default function BuildDetail() {
         )
       );
 
-      // Check for any non-successful responses
       const failed = results.filter((r: any) => r?.status && r.status >= 400);
 
       if (failed.length > 0) {
-        // Show a notification for failure
         showApiErrorMessage({
           error: failed,
           title: t`Failed to add some parts`
         });
       } else {
-        // Success notification
         notifications.show({
           title: t`Parts added`,
           message: t`${partsToAdd.length} parts added to required parts`,
@@ -290,7 +303,14 @@ export default function BuildDetail() {
 
       setSelectedPartIds([]);
       closeCatalogModal();
-      buildLineQuery.refetch();
+
+      // Build line rows are derived from BOM changes and are updated in the background.
+      // Poll the list briefly so the UI catches up once the async build-line refresh completes.
+      const updated = await waitForBuildLinesToUpdate();
+      if (!updated) {
+        await buildLineQuery.refetch();
+      }
+
       refreshInstance();
     } catch (err) {
       console.error('Failed to add parts to project:', err);

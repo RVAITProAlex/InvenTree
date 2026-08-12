@@ -70,7 +70,7 @@ import BuildAllocatedStockTable from '../../tables/build/BuildAllocatedStockTabl
 import BuildLineTable from '../../tables/build/BuildLineTable';
 import { BuildOrderTable } from '../../tables/build/BuildOrderTable';
 import BuildOutputTable from '../../tables/build/BuildOutputTable';
-import { PartTable } from '../../tables/part/PartTable';
+import { PartListTable } from '../../tables/part/PartTable';
 import PartTestResultTable from '../../tables/part/PartTestResultTable';
 import { PurchaseOrderTable } from '../../tables/purchasing/PurchaseOrderTable';
 import { StockItemTable } from '../../tables/stock/StockItemTable';
@@ -537,7 +537,7 @@ export default function BuildDetail() {
       {issueOrder.modal}
       {completeOrder.modal}
 
-      {/* Interactive Catalog Multi-Selection Modal */}
+{/* Interactive Catalog Multi-Selection Modal */}
       <Modal
         opened={catalogModalOpened}
         onClose={closeCatalogModal}
@@ -546,15 +546,13 @@ export default function BuildDetail() {
       >
         <Stack gap='md'>
           <ScrollArea h={500}>
-            <PartTable
-              props={{
-                enableSelection: true,
-                onSelectionChange: (selectedRows: any[]) => {
-                  setSelectedPartIds(selectedRows.map((r) => r.pk));
-                },
-                params: {
-                  active: true
-                }
+            <PartListTable
+              enableSelection={true}
+              onSelectionChange={(selectedRows: any[]) => {
+                setSelectedPartIds(selectedRows.map((r) => r.pk));
+              }}
+              params={{
+                active: true
               }}
             />
           </ScrollArea>

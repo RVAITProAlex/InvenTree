@@ -573,7 +573,7 @@ export default function BuildDetail() {
       {issueOrder.modal}
       {completeOrder.modal}
 
-      {/* Interactive Catalog Multi-Selection Modal */}
+{/* Interactive Catalog Multi-Selection Modal */}
       <Modal
         opened={catalogModalOpened}
         onClose={() => {
@@ -586,20 +586,23 @@ export default function BuildDetail() {
         <Stack gap='md'>
           <ScrollArea h={500}>
             <PartListTable
-              enableSelection={true}
-              onSelectedStateChange={(selectedRows: any[]) => {
-                if (Array.isArray(selectedRows)) {
-                  const ids = selectedRows
-                    .map((r) => r.pk ?? r.id)
-                    .filter((id): id is number => typeof id === 'number' && !isNaN(id));
-                  setSelectedPartIds(ids);
-                }
-              }}
+              allowAdd={false}
+              enableReports={false}
+              enableLabels={false}
               props={{
+                enableSelection: true,
+                onSelectedStateChange: (selectedRows: any[]) => {
+                  if (Array.isArray(selectedRows)) {
+                    const ids = selectedRows
+                      .map((r) => r.pk ?? r.id)
+                      .filter((id): id is number => typeof id === 'number' && !isNaN(id));
+                    setSelectedPartIds(ids);
+                  }
+                },
                 params: {
                   active: true
                 }
-              }}
+              } as any}
             />
           </ScrollArea>
           <Group justify='space-between' mt='md'>

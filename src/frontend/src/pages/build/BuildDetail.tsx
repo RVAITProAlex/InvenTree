@@ -558,7 +558,6 @@ export default function BuildDetail() {
           <DetailsBadge
             label={t`External`}
             color='blue'
-            key='external'
             visible={build.external}
           />
         ];
@@ -573,62 +572,64 @@ export default function BuildDetail() {
       {issueOrder.modal}
       {completeOrder.modal}
 
-  {/* Interactive Catalog Multi-Selection Modal */}
-    <Modal
-    opened={catalogModalOpened}
-    onClose={() => {
-      setSelectedPartIds([]);
-      closeCatalogModal();
-    }}
-    title={t`Select Required Items from Catalog`}
-    size='85%'
-    >
-    <Stack gap='md'>
-      <ScrollArea h={500}>
-        <PartListTable
-          allowAdd={false}
-          enableReports={false}
-          enableLabels={false}
-          enableSelection={true}
-          onSelectedStateChange={(selectedRows: any[]) => {
+{/* Interactive Catalog Multi-Selection Modal */}
+<Modal
+  opened={catalogModalOpened}
+  onClose={() => {
+    setSelectedPartIds([]);
+    closeCatalogModal();
+  }}
+  title={t`Select Required Items from Catalog`}
+  size='85%'
+>
+  <Stack gap='md'>
+    <ScrollArea h={500}>
+      <PartListTable
+        allowAdd={false}
+        enableReports={false}
+        enableLabels={false}
+        props={{
+          enableSelection: true,
+          onSelectedStateChange: (selectedRows: any[]) => {
             if (Array.isArray(selectedRows)) {
               const ids = selectedRows
-                .map((r) => r.pk ?? r.id)
+                .map((r) => (typeof r === 'number' ? r : (r?.pk ?? r?.id)))
                 .filter((id): id is number => typeof id === 'number' && !isNaN(id));
               setSelectedPartIds(ids);
             }
-          }}
-          params={{
+          },
+          params: {
             active: true
+          }
+        }}
+      />
+    </ScrollArea>
+    <Group justify='space-between' mt='md'>
+      <Text size='sm' fw={500}>
+        {selectedPartIds.length} {t`items selected`}
+      </Text>
+      <Group>
+        <Button
+          variant='default'
+          onClick={() => {
+            setSelectedPartIds([]);
+            closeCatalogModal();
           }}
-        />
-      </ScrollArea>
-      <Group justify='space-between' mt='md'>
-        <Text size='sm' fw={500}>
-          {selectedPartIds.length} {t`items selected`}
-        </Text>
-        <Group>
-          <Button
-            variant='default'
-            onClick={() => {
-              setSelectedPartIds([]);
-              closeCatalogModal();
-            }}
-          >
-            {t`Cancel`}
-          </Button>
-          <Button
-            color='green'
-            disabled={selectedPartIds.length === 0}
-            loading={isSubmittingParts}
-            onClick={handleAddSelectedParts}
-          >
-            {t`Add Selected Items (${selectedPartIds.length})`}
-          </Button>
-        </Group>
+        >
+          {t`Cancel`}
+        </Button>
+        <Button
+          color='green'
+          disabled={selectedPartIds.length === 0}
+          loading={isSubmittingParts}
+          onClick={handleAddSelectedParts}
+        >
+          {t`Add Selected Items (${selectedPartIds.length})`}
+        </Button>
       </Group>
-    </Stack>
-    </Modal>
+    </Group>
+  </Stack>
+</Modal>
 
       <InstanceDetail query={instanceQuery} requiredRole={UserRoles.build}>
         <Stack gap='xs'>

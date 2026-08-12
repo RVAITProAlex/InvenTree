@@ -549,18 +549,39 @@ export default function BuildDetail() {
             <PartListTable
               props={{
                 enableSelection: true,
+                
+                // Force-hide all toolbar action icons
+                allowAdd: false,
+                enableAdd: false,
                 enableReports: false,
                 enableLabels: false,
+                enableDownload: false,
                 enableBulkDelete: false,
-                allowAdd: false,
+                enableMassDelete: false,
                 tableActions: [],
-                onSelectedStateChange: (selectedRows: any[]) => {
-                  if (Array.isArray(selectedRows)) {
-                    setSelectedPartIds(
-                      selectedRows.map((r) => r.original?.pk ?? r.pk ?? r.id)
-                    );
+                customActionGroups: [],
+                
+                // Catch all possible InvenTree selection state variations
+                onRowSelectionChange: (data: any) => {
+                  if (Array.isArray(data)) {
+                    // If it returns an array of row objects
+                    setSelectedPartIds(data.map((r: any) => r.pk ?? r.id));
+                  } else if (typeof data === 'object' && data !== null) {
+                    // If it returns a Tanstack state object like { "123": true, "124": false }
+                    const selectedKeys = Object.keys(data)
+                      .filter((key) => data[key])
+                      .map(Number)
+                      .filter((n) => !isNaN(n));
+                    setSelectedPartIds(selectedKeys);
                   }
                 },
+                // Fallback for older InvenTree table versions
+                onSelectedRecords: (records: any[]) => {
+                  if (Array.isArray(records)) {
+                    setSelectedPartIds(records.map((r: any) => r.pk ?? r.id));
+                  }
+                },
+                
                 params: {
                   active: true
                 }

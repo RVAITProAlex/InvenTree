@@ -338,10 +338,12 @@ export default function BuildDetail() {
         icon: <IconShoppingCart />,
         content: build.pk ? (
           <PurchaseOrderTable
-            params={{
-              project_code: build.reference,
-              outstanding: true
-            }}
+            {...({
+              params: {
+                project_code: build.reference,
+                outstanding: true
+              }
+            } as any)}
           />
         ) : (
           <Skeleton />

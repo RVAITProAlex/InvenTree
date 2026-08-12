@@ -27,6 +27,8 @@ import {
   IconSitemap
 } from '@tabler/icons-react';
 import { useMemo, useState } from 'react';
+import { notifications } from '@mantine/notifications';
+import { showApiErrorMessage } from '../../functions/notifications';
 import { useParams } from 'react-router-dom';
 
 import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
@@ -248,16 +250,43 @@ export default function BuildDetail() {
     if (selectedPartIds.length === 0) return;
     setIsSubmittingParts(true);
 
+    const partsToAdd = [...selectedPartIds];
+
     try {
-      await Promise.all(
-        selectedPartIds.map((partId) =>
-          api.post(ApiEndpoints.build_line_list, {
-            build: id,
-            part: partId,
+      const assemblyPartId = build?.part;
+
+      if (!assemblyPartId) {
+        throw new Error(t`Build assembly part is missing`);
+      }
+
+      const results = await Promise.all(
+        partsToAdd.map((partId) =>
+          api.post(ApiEndpoints.bom_list, {
+            part: assemblyPartId,
+            sub_part: partId,
             quantity: 1
           })
         )
       );
+
+      // Check for any non-successful responses
+      const failed = results.filter((r: any) => r?.status && r.status >= 400);
+
+      if (failed.length > 0) {
+        // Show a notification for failure
+        showApiErrorMessage({
+          error: failed,
+          title: t`Failed to add some parts`
+        });
+      } else {
+        // Success notification
+        notifications.show({
+          title: t`Parts added`,
+          message: t`${partsToAdd.length} parts added to required parts`,
+          color: 'green',
+          id: 'add-required-parts-success'
+        });
+      }
 
       setSelectedPartIds([]);
       closeCatalogModal();
@@ -265,6 +294,10 @@ export default function BuildDetail() {
       refreshInstance();
     } catch (err) {
       console.error('Failed to add parts to project:', err);
+      showApiErrorMessage({
+        error: err,
+        title: t`Failed to add parts`
+      });
     } finally {
       setIsSubmittingParts(false);
     }

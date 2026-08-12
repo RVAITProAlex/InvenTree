@@ -1,5 +1,16 @@
 import { t } from '@lingui/core/macro';
-import { Alert, Button, Group, Skeleton, Stack, Text, Title } from '@mantine/core';
+import {
+  Alert,
+  Button,
+  Group,
+  Modal,
+  ScrollArea,
+  Skeleton,
+  Stack,
+  Text,
+  Title
+} from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import {
   IconChecklist,
   IconCircleCheck,
@@ -15,7 +26,7 @@ import {
   IconShoppingCart,
   IconSitemap
 } from '@tabler/icons-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
@@ -45,6 +56,7 @@ import { PanelGroup } from '../../components/panels/PanelGroup';
 import ParametersPanel from '../../components/panels/ParametersPanel';
 import { StatusRenderer } from '../../components/render/StatusRenderer';
 import { RenderStockLocation } from '../../components/render/Stock';
+import { useApi } from '../../contexts/ApiContext';
 import { useBuildOrderFields } from '../../forms/BuildForms';
 import {
   useCreateApiFormModal,
@@ -58,6 +70,7 @@ import BuildAllocatedStockTable from '../../tables/build/BuildAllocatedStockTabl
 import BuildLineTable from '../../tables/build/BuildLineTable';
 import { BuildOrderTable } from '../../tables/build/BuildOrderTable';
 import BuildOutputTable from '../../tables/build/BuildOutputTable';
+import { PartTable } from '../../tables/part/PartTable';
 import PartTestResultTable from '../../tables/part/PartTestResultTable';
 import { PurchaseOrderTable } from '../../tables/purchasing/PurchaseOrderTable';
 import { StockItemTable } from '../../tables/stock/StockItemTable';
@@ -151,9 +164,16 @@ function BuildAllocationsPanel({
  */
 export default function BuildDetail() {
   const { id } = useParams();
+  const api = useApi();
 
   const user = useUserState();
   const globalSettings = useGlobalSettingsState();
+
+  // Modal open/close state for catalog multi-selection
+  const [catalogModalOpened, { open: openCatalogModal, close: closeCatalogModal }] =
+    useDisclosure(false);
+  const [selectedPartIds, setSelectedPartIds] = useState<number[]>([]);
+  const [isSubmittingParts, setIsSubmittingParts] = useState(false);
 
   // Fetch the number of BOM items associated with the build order
   const { instance: buildLineData, instanceQuery: buildLineQuery } =
@@ -223,35 +243,32 @@ export default function BuildDetail() {
     refetchOnMount: true
   });
 
-  // Modal to manually add inventory items to this Project/Build Order
-  const newRequiredPart = useCreateApiFormModal({
-    url: ApiEndpoints.build_line_list,
-    method: 'POST',
-    title: t`Add Required Part`,
-    fields: {
-      build: {
-        value: id,
-        hidden: true
-      },
-      part: {
-        field_type: 'related field',
-        model: ModelType.part,
-        required: true,
-        filters: {
-          active: true
-        }
-      },
-      quantity: {
-        required: true,
-        default: 1
-      }
-    },
-    successMessage: t`Required part added to project`,
-    onFormSuccess: () => {
+  // Batch-add selected catalog parts to project build lines
+  const handleAddSelectedParts = async () => {
+    if (selectedPartIds.length === 0) return;
+    setIsSubmittingParts(true);
+
+    try {
+      await Promise.all(
+        selectedPartIds.map((partId) =>
+          api.post(ApiEndpoints.build_line_list, {
+            build: id,
+            part: partId,
+            quantity: 1
+          })
+        )
+      );
+
+      setSelectedPartIds([]);
+      closeCatalogModal();
       buildLineQuery.refetch();
       refreshInstance();
+    } catch (err) {
+      console.error('Failed to add parts to project:', err);
+    } finally {
+      setIsSubmittingParts(false);
     }
-  });
+  };
 
   const buildPanels: PanelType[] = useMemo(() => {
     return [
@@ -277,9 +294,9 @@ export default function BuildDetail() {
               <Title order={4}>{t`Required Parts`}</Title>
               <Button
                 leftSection={<IconPlus size={16} />}
-                onClick={() => newRequiredPart.open()}
+                onClick={openCatalogModal}
               >
-                {t`Add Required Part`}
+                {t`Add Required Parts`}
               </Button>
             </Group>
             <BuildLinesPanel
@@ -320,7 +337,7 @@ export default function BuildDetail() {
     buildLineQuery.isFetching,
     buildLineQuery.isLoading,
     buildLineData,
-    newRequiredPart
+    openCatalogModal
   ]);
 
   const editBuildOrderFields = useBuildOrderFields({
@@ -519,7 +536,49 @@ export default function BuildDetail() {
       {holdOrder.modal}
       {issueOrder.modal}
       {completeOrder.modal}
-      {newRequiredPart.modal}
+
+      {/* Interactive Catalog Multi-Selection Modal */}
+      <Modal
+        opened={catalogModalOpened}
+        onClose={closeCatalogModal}
+        title={t`Select Required Parts from Catalog`}
+        size='80%'
+      >
+        <Stack gap='md'>
+          <ScrollArea h={500}>
+            <PartTable
+              props={{
+                enableSelection: true,
+                onSelectionChange: (selectedRows: any[]) => {
+                  setSelectedPartIds(selectedRows.map((r) => r.pk));
+                },
+                params: {
+                  active: true
+                }
+              }}
+            />
+          </ScrollArea>
+          <Group justify='space-between' mt='md'>
+            <Text size='sm'>
+              {selectedPartIds.length} {t`parts selected`}
+            </Text>
+            <Group>
+              <Button variant='default' onClick={closeCatalogModal}>
+                {t`Cancel`}
+              </Button>
+              <Button
+                color='green'
+                disabled={selectedPartIds.length === 0}
+                loading={isSubmittingParts}
+                onClick={handleAddSelectedParts}
+              >
+                {t`Add Selected Parts (${selectedPartIds.length})`}
+              </Button>
+            </Group>
+          </Group>
+        </Stack>
+      </Modal>
+
       <InstanceDetail query={instanceQuery} requiredRole={UserRoles.build}>
         <Stack gap='xs'>
           <PageDetail

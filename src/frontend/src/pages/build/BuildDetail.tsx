@@ -588,20 +588,30 @@ export default function BuildDetail() {
         allowAdd={false}
         enableReports={false}
         enableLabels={false}
-        props={{
-          enableSelection: true,
-          onSelectedStateChange: (selectedRows: any[]) => {
-            if (Array.isArray(selectedRows)) {
-              const ids = selectedRows
-                .map((r) => (typeof r === 'number' ? r : (r?.pk ?? r?.id)))
-                .filter((id): id is number => typeof id === 'number' && !isNaN(id));
-              setSelectedPartIds(ids);
+        props={
+          {
+            enableSelection: true,
+            onSelectedStateChange: (selectedRows: any[]) => {
+              if (Array.isArray(selectedRows)) {
+                const ids = selectedRows
+                  .map((r) => (typeof r === 'number' ? r : (r?.pk ?? r?.id)))
+                  .filter((id): id is number => typeof id === 'number' && !isNaN(id));
+                setSelectedPartIds(ids);
+              }
+            },
+            onSelectedRecordsChange: (selectedRows: any[]) => {
+              if (Array.isArray(selectedRows)) {
+                const ids = selectedRows
+                  .map((r) => (typeof r === 'number' ? r : (r?.pk ?? r?.id)))
+                  .filter((id): id is number => typeof id === 'number' && !isNaN(id));
+                setSelectedPartIds(ids);
+              }
+            },
+            params: {
+              active: true
             }
-          },
-          params: {
-            active: true
-          }
-        }}
+          } as any
+        }
       />
     </ScrollArea>
     <Group justify='space-between' mt='md'>

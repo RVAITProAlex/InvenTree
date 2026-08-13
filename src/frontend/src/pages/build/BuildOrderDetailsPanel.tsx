@@ -4,7 +4,7 @@ import {
   Grid,
   Group,
   Paper,
-  ProgressBar,
+  Progress,
   Stack,
   Text,
   Title
@@ -132,9 +132,11 @@ export function BuildOrderDetailsPanel({
 
             <Stack gap={4} mt='xs'>
               <Text size='xs' c='dimmed'>{t`Overall Stock Readiness`}</Text>
-              <ProgressBar
+              <Progress
                 value={materialMetrics.percentReady}
                 color={materialMetrics.percentReady === 100 ? 'green' : 'blue'}
+                size='md'
+                radius='xl'
               />
             </Stack>
           </Stack>

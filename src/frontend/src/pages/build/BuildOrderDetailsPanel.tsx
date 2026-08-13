@@ -72,6 +72,19 @@ export function BuildOrderDetailsPanel({
     return null;
   }, [instance]);
 
+  // Description / Title fallback
+  const projectTitle =
+    instance?.description ||
+    instance?.title ||
+    instance?.notes ||
+    'Project Details';
+
+  const projectScope =
+    instance?.description ||
+    instance?.title ||
+    instance?.notes ||
+    'No description provided.';
+
   return (
     <Grid p='xs' gutter='md'>
       {/* Box 1: Project Identity & Scope */}
@@ -79,16 +92,16 @@ export function BuildOrderDetailsPanel({
         <Paper p='md' withBorder radius='md' h='100%'>
           <Stack gap='xs'>
             <Group justify='space-between'>
-              <Title order={4}>{instance.description || 'Project Details'}</Title>
+              <Title order={4}>{projectTitle}</Title>
               <StatusRenderer
-                status={instance.status_custom_key || instance.status}
+                status={instance?.status_custom_key || instance?.status}
                 type={ModelType.build}
               />
             </Group>
 
             <Group gap='xs' mt='xs'>
               <Text fw={500} size='sm' c='dimmed'>Project Reference:</Text>
-              <Badge variant='outline' color='blue'>{instance.reference}</Badge>
+              <Badge variant='outline' color='blue'>{instance?.reference}</Badge>
             </Group>
 
             {clientTag && (
@@ -100,7 +113,7 @@ export function BuildOrderDetailsPanel({
 
             <Stack gap={2} mt='xs'>
               <Text fw={500} size='sm' c='dimmed'>Project Purpose / Scope:</Text>
-              <Text size='sm'>{instance.description || 'No description provided.'}</Text>
+              <Text size='sm'>{projectScope}</Text>
             </Stack>
           </Stack>
         </Paper>
@@ -151,8 +164,10 @@ export function BuildOrderDetailsPanel({
 
             <Group justify='space-between'>
               <Text size='sm' c='dimmed'>Project Lead:</Text>
-              {instance.responsible_detail ? (
+              {instance?.responsible_detail ? (
                 <RenderUser user={instance.responsible_detail} />
+              ) : instance?.responsible ? (
+                <Text size='sm'>{String(instance.responsible)}</Text>
               ) : (
                 <Text size='sm'>-</Text>
               )}
@@ -160,8 +175,10 @@ export function BuildOrderDetailsPanel({
 
             <Group justify='space-between'>
               <Text size='sm' c='dimmed'>Created By:</Text>
-              {instance.issued_by_detail ? (
+              {instance?.issued_by_detail ? (
                 <RenderUser user={instance.issued_by_detail} />
+              ) : instance?.issued_by ? (
+                <Text size='sm'>{String(instance.issued_by)}</Text>
               ) : (
                 <Text size='sm'>-</Text>
               )}
@@ -169,8 +186,10 @@ export function BuildOrderDetailsPanel({
 
             <Group justify='space-between'>
               <Text size='sm' c='dimmed'>Staging Location:</Text>
-              {instance.take_from_detail ? (
+              {instance?.take_from_detail ? (
                 <RenderStockLocation instance={instance.take_from_detail} />
+              ) : instance?.take_from ? (
+                <Text size='sm'>{String(instance.take_from)}</Text>
               ) : (
                 <Text size='sm'>-</Text>
               )}
@@ -190,13 +209,13 @@ export function BuildOrderDetailsPanel({
 
             <Group justify='space-between'>
               <Text size='sm' c='dimmed'>Date Created:</Text>
-              <Text size='sm'>{instance.creation_date || '-'}</Text>
+              <Text size='sm'>{instance?.creation_date || '-'}</Text>
             </Group>
 
             <Group justify='space-between'>
               <Text size='sm' c='dimmed'>Target Completion:</Text>
               <Text size='sm' fw={500}>
-                {instance.target_date || 'No target date set'}
+                {instance?.target_date || 'No target date set'}
               </Text>
             </Group>
           </Stack>

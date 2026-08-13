@@ -10,7 +10,6 @@ import {
   Title
 } from '@mantine/core';
 import {
-  IconBoxes,
   IconCalendar,
   IconChecklist,
   IconInfoCircle,
@@ -115,7 +114,7 @@ export function BuildOrderDetailsPanel({
         <Paper p='md' withBorder radius='md' h='100%'>
           <Stack gap='xs'>
             <Group gap='xs'>
-              <IconBoxes size={20} color='gray' />
+              <IconChecklist size={20} color='gray' />
               <Title order={5}>{t`Material Readiness`}</Title>
             </Group>
 

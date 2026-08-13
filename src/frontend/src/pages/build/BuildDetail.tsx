@@ -13,8 +13,8 @@ import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import {
   IconCircleCheck,
-  IconExclamationCircle,
   IconInfoCircle,
+  IconLink,
   IconListNumbers,
   IconPlus,
   IconShoppingCart,
@@ -108,18 +108,31 @@ export default function BuildDetail() {
   const user = useUserState();
   const globalSettings = useGlobalSettingsState();
 
-  // Modal open/close state for catalog multi-selection
+  // Catalog selection state
   const [catalogModalOpened, { open: openCatalogModal, close: closeCatalogModal }] =
     useDisclosure(false);
   const [selectedParts, setSelectedParts] = useState<any[]>([]);
   const [isSubmittingParts, setIsSubmittingParts] = useState(false);
 
-  // Extract primary keys from selected table record objects
+  // Attach Purchase Order selection state
+  const [attachPoModalOpened, { open: openAttachPoModal, close: closeAttachPoModal }] =
+    useDisclosure(false);
+  const [selectedPosToAttach, setSelectedPosToAttach] = useState<any[]>([]);
+  const [isAttachingPo, setIsAttachingPo] = useState(false);
+
+  // Extract primary keys from selected catalog items
   const selectedPartIds = useMemo(() => {
     return selectedParts
       .map((p) => (typeof p === 'number' ? p : (p?.pk ?? p?.id)))
       .filter((id): id is number => typeof id === 'number' && !isNaN(id));
   }, [selectedParts]);
+
+  // Extract primary keys from selected POs in attach modal
+  const selectedPoIds = useMemo(() => {
+    return selectedPosToAttach
+      .map((po) => (typeof po === 'number' ? po : (po?.pk ?? po?.id)))
+      .filter((id): id is number => typeof id === 'number' && !isNaN(id));
+  }, [selectedPosToAttach]);
 
   // Fetch BOM items count
   const { instance: buildLineData, instanceQuery: buildLineQuery } =
@@ -172,13 +185,11 @@ export default function BuildDetail() {
         throw new Error('Build order is missing parent assembly part ID');
       }
 
-      // Group selected IDs
       const partCounts: Record<number, number> = {};
       for (const id of selectedPartIds) {
         partCounts[id] = (partCounts[id] || 0) + 1;
       }
 
-      // Fetch existing BOM items
       const existingBomResponse = await api.get(apiUrl(ApiEndpoints.bom_list), {
         params: { part: assemblyPartId }
       });
@@ -231,6 +242,44 @@ export default function BuildDetail() {
     }
   };
 
+  // Attach selected existing POs to this project
+  const handleAttachSelectedPos = async () => {
+    if (selectedPoIds.length === 0) return;
+    setIsAttachingPo(true);
+
+    try {
+      const projectRef = build.reference || `PROJ-${build.pk}`;
+
+      await Promise.all(
+        selectedPoIds.map((poId) =>
+          api.patch(apiUrl(ApiEndpoints.purchase_order_list, poId), {
+            project_code: projectRef,
+            description: `Linked to Project ${projectRef}`
+          })
+        )
+      );
+
+      notifications.show({
+        title: 'Purchase Order Attached',
+        message: `${selectedPoIds.length} Purchase Order(s) attached to Project ${projectRef}`,
+        color: 'green',
+        id: 'attach-po-success'
+      });
+
+      setSelectedPosToAttach([]);
+      closeAttachPoModal();
+      refreshInstance();
+    } catch (err: any) {
+      console.error('Failed to attach POs:', err);
+      showApiErrorMessage({
+        error: err,
+        title: 'Failed to attach Purchase Order'
+      });
+    } finally {
+      setIsAttachingPo(false);
+    }
+  };
+
   // Form modal to create a new Purchase Order linked to this project
   const createPurchaseOrderModal = useCreateApiFormModal({
     url: ApiEndpoints.purchase_order_list,
@@ -239,16 +288,20 @@ export default function BuildDetail() {
     fields: {
       supplier: {},
       reference: {},
+      project_code: {},
       description: {},
       target_date: {}
     },
     initialData: {
+      project_code: build.reference,
       description: `Purchase order for Project ${build.reference || ''}`
     },
     onFormSuccess: refreshInstance
   });
 
   const buildPanels: PanelType[] = useMemo(() => {
+    const projectRef = build.reference || `PROJ-${build.pk}`;
+
     return [
       {
         name: 'details',
@@ -291,14 +344,23 @@ export default function BuildDetail() {
           <Stack gap='md'>
             <Group justify='space-between'>
               <Title order={4}>Project Purchase Orders</Title>
-              <Button
-                leftSection={<IconPlus size={16} />}
-                onClick={createPurchaseOrderModal.open}
-              >
-                Create Purchase Order
-              </Button>
+              <Group>
+                <Button
+                  variant='outline'
+                  leftSection={<IconLink size={16} />}
+                  onClick={openAttachPoModal}
+                >
+                  Attach Existing PO
+                </Button>
+                <Button
+                  leftSection={<IconPlus size={16} />}
+                  onClick={createPurchaseOrderModal.open}
+                >
+                  Create Purchase Order
+                </Button>
+              </Group>
             </Group>
-            <PurchaseOrderTable />
+            <PurchaseOrderTable params={{ project_code: projectRef }} />
           </Stack>
         ) : (
           <Skeleton />
@@ -323,6 +385,7 @@ export default function BuildDetail() {
     buildLineQuery.isFetching,
     buildLineQuery.isLoading,
     openCatalogModal,
+    openAttachPoModal,
     createPurchaseOrderModal.open
   ]);
 
@@ -523,7 +586,7 @@ export default function BuildDetail() {
       {completeOrder.modal}
       {createPurchaseOrderModal.modal}
 
-      {/* Catalog Modal */}
+      {/* Modal 1: Catalog Required Items Selection */}
       <Modal
         opened={catalogModalOpened}
         onClose={() => {
@@ -566,6 +629,55 @@ export default function BuildDetail() {
                 onClick={handleAddSelectedParts}
               >
                 Add Selected Items ({selectedPartIds.length})
+              </Button>
+            </Group>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* Modal 2: Attach Existing Purchase Order */}
+      <Modal
+        opened={attachPoModalOpened}
+        onClose={() => {
+          setSelectedPosToAttach([]);
+          closeAttachPoModal();
+        }}
+        title='Attach Existing Purchase Order to Project'
+        size='85%'
+      >
+        <Stack gap='md'>
+          <Text size='sm' c='dimmed'>
+            Search and select existing Purchase Orders to link to Project{' '}
+            <b>{build.reference}</b>:
+          </Text>
+          <ScrollArea h={500}>
+            <PurchaseOrderTable
+              enableSelection={true}
+              selectedRecords={selectedPosToAttach}
+              onSelectedRecordsChange={setSelectedPosToAttach}
+            />
+          </ScrollArea>
+          <Group justify='space-between' mt='md'>
+            <Text size='sm' fw={500}>
+              {selectedPoIds.length} Purchase Order(s) selected
+            </Text>
+            <Group>
+              <Button
+                variant='default'
+                onClick={() => {
+                  setSelectedPosToAttach([]);
+                  closeAttachPoModal();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                color='blue'
+                disabled={selectedPoIds.length === 0}
+                loading={isAttachingPo}
+                onClick={handleAttachSelectedPos}
+              >
+                Attach Selected POs ({selectedPoIds.length})
               </Button>
             </Group>
           </Group>

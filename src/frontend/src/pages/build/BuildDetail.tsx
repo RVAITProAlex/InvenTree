@@ -212,7 +212,7 @@ export default function BuildDetail() {
           filters: {
             active: true
           }
-          };
+          }
         }
       },
       quantity: {

@@ -242,7 +242,7 @@ export default function BuildDetail() {
     }
   };
 
-  // Attach selected existing POs to this project
+// Attach selected existing POs to this project (regardless of PO status)
   const handleAttachSelectedPos = async () => {
     if (selectedPoIds.length === 0) return;
     setIsAttachingPo(true);
@@ -250,7 +250,7 @@ export default function BuildDetail() {
     try {
       const projectRef = build.reference || `PROJ-${build.pk}`;
 
-      await Promise.all(
+      const results = await Promise.allSettled(
         selectedPoIds.map((poId) =>
           api.patch(apiUrl(ApiEndpoints.purchase_order_list, poId), {
             project_code: projectRef,
@@ -259,12 +259,21 @@ export default function BuildDetail() {
         )
       );
 
-      notifications.show({
-        title: 'Purchase Order Attached',
-        message: `${selectedPoIds.length} Purchase Order(s) attached to Project ${projectRef}`,
-        color: 'green',
-        id: 'attach-po-success'
-      });
+      const failed = results.filter((r) => r.status === 'rejected');
+
+      if (failed.length > 0) {
+        notifications.show({
+          title: 'Attachment Completed with Warnings',
+          message: `${selectedPoIds.length - failed.length} PO(s) attached. Some completed POs may require administrator edit permissions in backend settings.`,
+          color: 'orange'
+        });
+      } else {
+        notifications.show({
+          title: 'Purchase Orders Attached',
+          message: `${selectedPoIds.length} Purchase Order(s) attached to Project ${projectRef}`,
+          color: 'green'
+        });
+      }
 
       setSelectedPosToAttach([]);
       closeAttachPoModal();

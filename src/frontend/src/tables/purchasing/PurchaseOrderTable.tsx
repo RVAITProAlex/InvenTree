@@ -1,164 +1,49 @@
-import { t } from '@lingui/core/macro';
-import { useMemo } from 'react';
-
-import { AddItemButton } from '@lib/components/AddItemButton';
+import { useEffect } from 'react';
 import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
 import { ModelType } from '@lib/enums/ModelType';
-import { UserRoles } from '@lib/enums/Roles';
 import { apiUrl } from '@lib/functions/Api';
 import useTable from '@lib/hooks/UseTable';
-import type { TableFilter } from '@lib/types/Filters';
-import {
-  CompanyColumn,
-  CompletionDateColumn,
-  CreatedByColumn,
-  CreationDateColumn,
-  DescriptionColumn,
-  LineItemsProgressColumn,
-  LinkColumn,
-  ProjectCodeColumn,
-  ReferenceColumn,
-  ResponsibleColumn,
-  StartDateColumn,
-  StatusColumn,
-  TargetDateColumn,
-  UpdatedAtColumn
-} from '../../components/tables/ColumnRenderers';
+import type { InvenTreeTableProps } from '@lib/types/Tables';
 import { InvenTreeTable } from '../../components/tables/InvenTreeTable';
-import { formatCurrency } from '../../defaults/formatters';
-import { usePurchaseOrderFields } from '../../forms/PurchaseOrderForms';
-import { useCreateApiFormModal } from '../../hooks/UseForm';
-import { useUserState } from '../../states/UserState';
-import PurchaseOrderFilters from './PurchaseOrderFilters';
 
-/**
- * Display a table of purchase orders
- */
 export function PurchaseOrderTable({
-  supplierId,
-  supplierPartId,
-  externalBuildId
-}: Readonly<{
-  supplierId?: number;
-  supplierPartId?: number;
-  externalBuildId?: number;
-}>) {
-  const table = useTable('purchase-order', {
-    initialFilters: [
-      {
-        name: 'outstanding',
-        value: 'true'
-      }
-    ]
-  });
-  const user = useUserState();
+  props,
+  params,
+  tableName = 'purchase-order',
+  enableSelection = false,
+  selectedRecords,
+  onSelectedRecordsChange
+}: {
+  props?: InvenTreeTableProps;
+  params?: any;
+  tableName?: string;
+  enableSelection?: boolean;
+  selectedRecords?: any[];
+  onSelectedRecordsChange?: (records: any[]) => void;
+}) {
+  const table = useTable(tableName);
 
-  const tableFilters: TableFilter[] = useMemo(() => {
-    return PurchaseOrderFilters({ includeDateFilters: true });
-  }, []);
-
-  const tableColumns = useMemo(() => {
-    return [
-      ReferenceColumn({
-        switchable: false
-      }),
-      DescriptionColumn({}),
-      {
-        accessor: 'supplier__name',
-        title: t`Supplier`,
-        sortable: true,
-        render: (record: any) => (
-          <CompanyColumn company={record.supplier_detail} />
-        )
-      },
-      {
-        accessor: 'supplier_reference',
-        copyable: true
-      },
-      LineItemsProgressColumn({}),
-      StatusColumn({ model: ModelType.purchaseorder }),
-      ProjectCodeColumn({
-        defaultVisible: false
-      }),
-      CreationDateColumn({
-        defaultVisible: false
-      }),
-      CreatedByColumn({
-        defaultVisible: false
-      }),
-      StartDateColumn({
-        defaultVisible: false
-      }),
-      TargetDateColumn({}),
-      CompletionDateColumn({
-        accessor: 'complete_date'
-      }),
-      UpdatedAtColumn({
-        defaultVisible: false
-      }),
-      {
-        accessor: 'total_price',
-        title: t`Total Price`,
-        sortable: true,
-        render: (record: any) => {
-          return formatCurrency(record.total_price, {
-            currency: record.order_currency || record.supplier_detail?.currency
-          });
-        }
-      },
-      ResponsibleColumn({}),
-      LinkColumn({})
-    ];
-  }, []);
-
-  const purchaseOrderFields = usePurchaseOrderFields({});
-
-  const newPurchaseOrder = useCreateApiFormModal({
-    url: ApiEndpoints.purchase_order_list,
-    title: t`Add Purchase Order`,
-    fields: purchaseOrderFields,
-    initialData: {
-      supplier: supplierId
-    },
-    follow: true,
-    modelType: ModelType.purchaseorder,
-    keepOpenOption: true
-  });
-
-  const tableActions = useMemo(() => {
-    return [
-      <AddItemButton
-        key='add-purchase-order'
-        tooltip={t`Add Purchase Order`}
-        onClick={() => newPurchaseOrder.open()}
-        hidden={!user.hasAddRole(UserRoles.purchase_order)}
-      />
-    ];
-  }, [user]);
+  // Broadcast row checkbox clicks back up to parent components / modals
+  useEffect(() => {
+    if (onSelectedRecordsChange && table.selectedRecords) {
+      onSelectedRecordsChange(table.selectedRecords);
+    }
+  }, [table.selectedRecords, onSelectedRecordsChange]);
 
   return (
-    <>
-      {newPurchaseOrder.modal}
-      <InvenTreeTable
-        url={apiUrl(ApiEndpoints.purchase_order_list)}
-        tableState={table}
-        columns={tableColumns}
-        props={{
-          params: {
-            supplier_detail: true,
-            supplier: supplierId,
-            supplier_part: supplierPartId,
-            external_build: externalBuildId
-          },
-          tableFilters: tableFilters,
-          tableActions: tableActions,
-          modelType: ModelType.purchaseorder,
-          enableSelection: true,
-          enableDownload: true,
-          enableReports: true,
-          enableLabels: true
-        }}
-      />
-    </>
+    <InvenTreeTable
+      url={apiUrl(ApiEndpoints.purchase_order_list)}
+      tableState={table}
+      props={{
+        ...props,
+        modelType: ModelType.purchaseorder,
+        enableSelection: enableSelection,
+        params: {
+          ...params,
+          ...props?.params,
+          supplier_detail: true
+        }
+      }}
+    />
   );
 }

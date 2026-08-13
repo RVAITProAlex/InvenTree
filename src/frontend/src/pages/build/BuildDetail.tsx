@@ -569,8 +569,7 @@ export default function BuildDetail() {
                     }
                   },
                   params: {
-                    active: true,
-                    component: true
+                    active: true
                   }
                 } as any
               }

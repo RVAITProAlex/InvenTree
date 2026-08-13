@@ -124,7 +124,8 @@ export function PartListTable({
   basePartInstance,
   props,
   tableName = 'item-list',
-  defaultPartData
+  defaultPartData,
+  onSelectedRecordsChange
 }: Readonly<{
   enableImport?: boolean;
   allowAdd?: boolean;
@@ -134,6 +135,7 @@ export function PartListTable({
   basePartInstance?: any;
   tableName?: string;
   defaultPartData?: any;
+  onSelectedRecordsChange?: (records: any[]) => void;
 }>) {
   const tableColumns = useMemo(() => partTableColumns(), []);
 
@@ -150,6 +152,13 @@ export function PartListTable({
   const user = useUserState();
   const globalSettings = useGlobalSettingsState();
   const refreshRef = useRef<() => void>(null!);
+
+  // Forward internal table selection changes up to the parent component
+  useEffect(() => {
+    if (onSelectedRecordsChange && table.selectedRecords) {
+      onSelectedRecordsChange(table.selectedRecords);
+    }
+  }, [table.selectedRecords, onSelectedRecordsChange]);
 
   useEffect(() => {
     refreshRef.current = table.refreshTable;
@@ -228,8 +237,8 @@ export function PartListTable({
 
   const rowActions = useCallback(
     (record: any): RowAction[] => {
-      const can_edit = user.hasChangePermission(ModelType.part);
-      const can_add = user.hasAddPermission(ModelType.part);
+      const can_edit = user.hasChangeRole(UserRoles.part);
+      const can_add = user.hasAddRole(UserRoles.part);
 
       return [
         RowEditAction({

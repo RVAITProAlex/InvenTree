@@ -598,18 +598,15 @@ export default function BuildDetail() {
       >
         <Stack gap='md'>
           <ScrollArea h={500}>
-            <PartListTable
-              allowAdd={false}
-              enableReports={false}
-              enableLabels={false}
-              enableSelection={true}
-              selectedRecords={selectedParts}
-              onSelectedRecordsChange={setSelectedParts}
-              props={catalogTableProps}
-              params={{
-                active: true
-              }}
-            />
+          <PartListTable
+            allowAdd={false}
+            enableReports={false}
+            enableLabels={false}
+            onSelectedRecordsChange={setSelectedParts}
+            props={{
+              params: { active: true }
+            }}
+          />
           </ScrollArea>
           <Group justify='space-between' mt='md'>
             <Text size='sm' fw={500}>

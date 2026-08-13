@@ -209,21 +209,14 @@ export default function BuildDetail() {
         value: build.part
       },
       sub_part: {
-        label: t`Required Item`,
-        type: 'choice',
-        api_url: ApiEndpoints.part_list,
-        required: true,
-        adjust_filters: (filters: any) => {
-          return {
-            ...filters,
+          filters: {
             active: true
+          }
           };
         }
       },
       quantity: {
-        label: t`Required Quantity`,
-        default: 1,
-        required: true
+        value: 1
       }
     },
     onFormSuccess: () => {

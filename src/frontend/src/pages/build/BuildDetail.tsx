@@ -142,10 +142,28 @@ export default function BuildDetail() {
   // Modal open/close state for catalog multi-selection
   const [catalogModalOpened, { open: openCatalogModal, close: closeCatalogModal }] =
     useDisclosure(false);
-  const [selectedPartIds, setSelectedPartIds] = useState<number[]>([]);
+  const [selectedParts, setSelectedParts] = useState<any[]>([]);
   const [isSubmittingParts, setIsSubmittingParts] = useState(false);
 
-  // Fetch the number of BOM items associated with the build order
+  // Extract primary keys from selected table record objects
+  const selectedPartIds = useMemo(() => {
+    return selectedParts
+      .map((p) => (typeof p === 'number' ? p : (p?.pk ?? p?.id)))
+      .filter((id): id is number => typeof id === 'number' && !isNaN(id));
+  }, [selectedParts]);
+
+  // Bind selection state directly to Mantine DataTable
+  const catalogTableProps = useMemo(
+    () => ({
+      enableSelection: true,
+      selectedRecords: selectedParts,
+      onSelectedRecordsChange: setSelectedParts,
+      params: { active: true }
+    }),
+    [selectedParts]
+  );
+
+  // Fetch BOM items count
   const { instance: buildLineData, instanceQuery: buildLineQuery } =
     useInstance({
       endpoint: ApiEndpoints.build_line_list,
@@ -162,7 +180,7 @@ export default function BuildDetail() {
       defaultValue: {}
     });
 
-  // Fetch the number of assembled BOM items associated with the build order
+  // Fetch subassembly BOM items count
   const { instance: subassemblyLineData } = useInstance({
     endpoint: ApiEndpoints.build_line_list,
     params: {
@@ -179,7 +197,7 @@ export default function BuildDetail() {
     defaultValue: {}
   });
 
-  // Fetch the number of child build orders associated with this build order
+  // Fetch child builds count
   const { instance: childBuildData } = useInstance({
     endpoint: ApiEndpoints.build_order_list,
     params: {
@@ -251,7 +269,7 @@ export default function BuildDetail() {
         });
       }
 
-      setSelectedPartIds([]);
+      setSelectedParts([]);
       closeCatalogModal();
 
       await buildLineQuery.refetch();
@@ -266,6 +284,28 @@ export default function BuildDetail() {
       setIsSubmittingParts(false);
     }
   };
+
+  // Form modal to create a new Purchase Order linked to this project
+  const createPurchaseOrderModal = useCreateApiFormModal({
+    url: ApiEndpoints.purchase_order_list,
+    title: t`Create Purchase Order for Project`,
+    modalId: 'create-po-for-project',
+    fields: {
+      supplier: {},
+      reference: {},
+      description: {},
+      external_build: {
+        hidden: true,
+        value: build.pk
+      },
+      target_date: {}
+    },
+    initialData: {
+      external_build: build.pk,
+      description: `Purchase order for Project ${build.reference || ''}`
+    },
+    onFormSuccess: refreshInstance
+  });
 
   const buildPanels: PanelType[] = useMemo(() => {
     return [
@@ -309,7 +349,18 @@ export default function BuildDetail() {
         label: t`Purchase Orders`,
         icon: <IconShoppingCart />,
         content: build.pk ? (
-          <PurchaseOrderTable />
+          <Stack gap='md'>
+            <Group justify='space-between'>
+              <Title order={4}>{t`Project Purchase Orders`}</Title>
+              <Button
+                leftSection={<IconPlus size={16} />}
+                onClick={createPurchaseOrderModal.open}
+              >
+                {t`Create Purchase Order for Project`}
+              </Button>
+            </Group>
+            <PurchaseOrderTable params={{ external_build: build.pk }} />
+          </Stack>
         ) : (
           <Skeleton />
         )
@@ -334,7 +385,8 @@ export default function BuildDetail() {
     buildLineQuery.isFetching,
     buildLineQuery.isLoading,
     buildLineData,
-    openCatalogModal
+    openCatalogModal,
+    createPurchaseOrderModal.open
   ]);
 
   const editBuildOrderFields = useBuildOrderFields({
@@ -532,12 +584,13 @@ export default function BuildDetail() {
       {holdOrder.modal}
       {issueOrder.modal}
       {completeOrder.modal}
+      {createPurchaseOrderModal.modal}
 
       {/* Interactive Catalog Multi-Selection Modal */}
       <Modal
         opened={catalogModalOpened}
         onClose={() => {
-          setSelectedPartIds([]);
+          setSelectedParts([]);
           closeCatalogModal();
         }}
         title={t`Select Required Items from Catalog`}
@@ -550,14 +603,9 @@ export default function BuildDetail() {
               enableReports={false}
               enableLabels={false}
               enableSelection={true}
-              onSelectedStateChange={(selectedRows: any[]) => {
-                if (Array.isArray(selectedRows)) {
-                  const ids = selectedRows
-                    .map((r) => (typeof r === 'number' ? r : (r?.pk ?? r?.id)))
-                    .filter((id): id is number => typeof id === 'number' && !isNaN(id));
-                  setSelectedPartIds(ids);
-                }
-              }}
+              selectedRecords={selectedParts}
+              onSelectedRecordsChange={setSelectedParts}
+              props={catalogTableProps}
               params={{
                 active: true
               }}
@@ -571,7 +619,7 @@ export default function BuildDetail() {
               <Button
                 variant='default'
                 onClick={() => {
-                  setSelectedPartIds([]);
+                  setSelectedParts([]);
                   closeCatalogModal();
                 }}
               >

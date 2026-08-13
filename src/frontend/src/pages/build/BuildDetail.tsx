@@ -249,6 +249,38 @@ export default function BuildDetail() {
   const handleAddSelectedParts = async () => {
     if (selectedPartIds.length === 0) return;
     setIsSubmittingParts(true);
+    try {
+        // Submit each selected part ID as a BOM requirement for this project's parent part
+        await Promise.all(
+          selectedPartIds.map((partId) =>
+            api.post(apiUrl(ApiEndpoints.bom_list), {
+              part: build.part,    // ID of the project/assembly item
+              sub_part: partId,   // ID of the selected required item
+              quantity: 1          // Default required quantity
+            })
+          )
+        );
+
+        // Refresh project page data & clear selection
+        await refreshInstance();
+        setSelectedPartIds([]);
+        closeCatalogModal();
+
+        showNotification({
+          title: t`Items Added`,
+          message: t`Successfully added selected items to project requirements.`,
+          color: 'green'
+        });
+      } catch (error: any) {
+        showNotification({
+          title: t`Error`,
+          message: error?.response?.data?.detail || t`Failed to add selected items.`,
+          color: 'red'
+        });
+      } finally {
+        setIsSubmittingParts(false);
+      }
+    };
 
     try {
       const assemblyPartId = build?.part;
@@ -340,19 +372,21 @@ export default function BuildDetail() {
         name: 'purchase-orders',
         label: t`Purchase Orders`,
         icon: <IconShoppingCart />,
-        content: build.pk ? (
-          <PurchaseOrderTable
-            {...({
-              params: {
-                project_code: build.reference,
-                outstanding: true
-              }
-            } as any)}
-          />
-        ) : (
-          <Skeleton />
-        )
-      },
+        content: (
+                <PurchaseOrderTable
+                  params={{
+                    build: build.pk // Filters POs linked to this specific project
+                  }}
+                  allowAdd={true}
+                  defaultFormData={{
+                    build: build.pk // Pre-links new POs to this project
+                  }}
+                />
+              )
+            },
+            // ... attachments, notes, etc.
+          ];
+        }, [build]);
       AttachmentPanel({
         model_type: ModelType.build,
         model_id: build.pk

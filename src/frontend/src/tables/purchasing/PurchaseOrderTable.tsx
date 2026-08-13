@@ -4,7 +4,7 @@ import { apiUrl } from '@lib/functions/Api';
 import useTable from '@lib/hooks/UseTable';
 import type { TableColumn, InvenTreeTableProps } from '@lib/types/Tables';
 import { t } from '@lingui/core/macro';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { InvenTreeTable } from '../../components/tables/InvenTreeTable';
 
 /**
@@ -36,7 +36,9 @@ function purchaseOrderColumns(): TableColumn[] {
     {
       accessor: 'project_code',
       title: t`Project Code`,
-      sortable: true
+      sortable: true,
+      render: (record: any) =>
+        record.project_code_detail?.code ?? record.project_code ?? '-'
     },
     {
       accessor: 'line_items',
@@ -72,7 +74,8 @@ export function PurchaseOrderTable({
   tableName = 'purchase-order',
   enableSelection = false,
   selectedRecords,
-  onSelectedRecordsChange
+  onSelectedRecordsChange,
+  filterProjectRef
 }: {
   props?: InvenTreeTableProps;
   params?: any;
@@ -80,6 +83,7 @@ export function PurchaseOrderTable({
   enableSelection?: boolean;
   selectedRecords?: any[];
   onSelectedRecordsChange?: (records: any[]) => void;
+  filterProjectRef?: string;
 }) {
   const table = useTable(tableName);
   const tableColumns = useMemo(() => purchaseOrderColumns(), []);
@@ -91,6 +95,24 @@ export function PurchaseOrderTable({
     }
   }, [table.selectedRecords, onSelectedRecordsChange]);
 
+  // Safely filter records on frontend to avoid API 400 validation errors
+  const formatRecords = useCallback(
+    (records: any[]): any[] => {
+      if (!Array.isArray(records)) return [];
+      if (!filterProjectRef) return records;
+
+      const refLower = filterProjectRef.toLowerCase();
+      return records.filter((r) => {
+        const code = String(
+          r?.project_code_detail?.code ?? r?.project_code ?? ''
+        ).toLowerCase();
+        const desc = String(r?.description ?? '').toLowerCase();
+        return code.includes(refLower) || desc.includes(refLower);
+      });
+    },
+    [filterProjectRef]
+  );
+
   return (
     <InvenTreeTable
       url={apiUrl(ApiEndpoints.purchase_order_list)}
@@ -100,10 +122,12 @@ export function PurchaseOrderTable({
         ...props,
         modelType: ModelType.purchaseorder,
         enableSelection: enableSelection,
+        dataFormatter: formatRecords,
         params: {
           ...params,
           ...props?.params,
-          supplier_detail: true
+          supplier_detail: true,
+          project_code_detail: true
         }
       }}
     />

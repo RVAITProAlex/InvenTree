@@ -345,7 +345,7 @@ export default function BuildDetail() {
           </Stack>
         )
       },
-      {
+{
         name: 'purchase-orders',
         label: 'Purchase Orders',
         icon: <IconShoppingCart />,
@@ -369,7 +369,7 @@ export default function BuildDetail() {
                 </Button>
               </Group>
             </Group>
-            <PurchaseOrderTable params={{ project_code: projectRef }} />
+            <PurchaseOrderTable filterProjectRef={projectRef} />
           </Stack>
         ) : (
           <Skeleton />

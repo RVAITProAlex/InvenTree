@@ -3,31 +3,21 @@ import {
   Alert,
   Button,
   Group,
-  Modal,
-  ScrollArea,
   Skeleton,
   Stack,
   Text,
   Title
 } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
-import { notifications } from '@mantine/notifications';
 import {
-  IconChecklist,
   IconCircleCheck,
-  IconClipboardCheck,
-  IconClipboardList,
   IconExclamationCircle,
   IconInfoCircle,
-  IconList,
-  IconListCheck,
   IconListNumbers,
-  IconPaperclip,
   IconPlus,
   IconShoppingCart,
   IconSitemap
 } from '@tabler/icons-react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
@@ -54,12 +44,9 @@ import { PageDetail } from '../../components/nav/PageDetail';
 import AttachmentPanel from '../../components/panels/AttachmentPanel';
 import NotesPanel from '../../components/panels/NotesPanel';
 import { PanelGroup } from '../../components/panels/PanelGroup';
-import ParametersPanel from '../../components/panels/ParametersPanel';
 import { StatusRenderer } from '../../components/render/StatusRenderer';
 import { RenderStockLocation } from '../../components/render/Stock';
-import { useApi } from '../../contexts/ApiContext';
 import { useBuildOrderFields } from '../../forms/BuildForms';
-import { showApiErrorMessage } from '../../functions/notifications';
 import {
   useCreateApiFormModal,
   useEditApiFormModal
@@ -68,14 +55,8 @@ import { useInstance } from '../../hooks/UseInstance';
 import useStatusCodes from '../../hooks/UseStatusCodes';
 import { useGlobalSettingsState } from '../../states/SettingsStates';
 import { useUserState } from '../../states/UserState';
-import BuildAllocatedStockTable from '../../tables/build/BuildAllocatedStockTable';
 import BuildLineTable from '../../tables/build/BuildLineTable';
-import { BuildOrderTable } from '../../tables/build/BuildOrderTable';
-import BuildOutputTable from '../../tables/build/BuildOutputTable';
-import { PartListTable } from '../../tables/part/PartTable';
-import PartTestResultTable from '../../tables/part/PartTestResultTable';
 import { PurchaseOrderTable } from '../../tables/purchasing/PurchaseOrderTable';
-import { StockItemTable } from '../../tables/stock/StockItemTable';
 import { BuildOrderDetailsPanel } from './BuildOrderDetailsPanel';
 
 function NoItems() {
@@ -141,41 +122,14 @@ function BuildLinesPanel({
   );
 }
 
-function BuildAllocationsPanel({
-  build,
-  isLoading,
-  hasItems
-}: Readonly<{
-  build: any;
-  isLoading: boolean;
-  hasItems: boolean;
-}>) {
-  if (isLoading || !build.pk) {
-    return <Skeleton w={'100%'} h={400} animate />;
-  }
-
-  if (!hasItems) {
-    return <NoItems />;
-  }
-
-  return <BuildAllocatedStockTable buildId={build.pk} showPartInfo allowEdit />;
-}
-
 /**
- * Detail page for a single Build Order
+ * Detail page for a single Build Order / Project
  */
 export default function BuildDetail() {
   const { id } = useParams();
-  const api = useApi();
 
   const user = useUserState();
   const globalSettings = useGlobalSettingsState();
-
-  // Modal open/close state for catalog multi-selection
-  const [catalogModalOpened, { open: openCatalogModal, close: closeCatalogModal }] =
-    useDisclosure(false);
-  const [selectedPartIds, setSelectedPartIds] = useState<number[]>([]);
-  const [isSubmittingParts, setIsSubmittingParts] = useState(false);
 
   // Fetch the number of BOM items associated with the build order
   const { instance: buildLineData, instanceQuery: buildLineQuery } =
@@ -245,91 +199,38 @@ export default function BuildDetail() {
     refetchOnMount: true
   });
 
-  // Batch-add selected catalog parts to the build assembly's BOM
-const handleAddSelectedParts = async () => {
-  if (!selectedPartIds.length) return;
-
-  setIsSubmittingParts(true);
-
-  try {
-    const results = await Promise.all(
-      selectedPartIds.map((partId) =>
-        api.post(apiUrl(ApiEndpoints.bom_list), {
-          part: build.part,
-          sub_part: partId,
-          quantity: 1
-        })
-      )
-    );
-
-    await refreshInstance();
-    setSelectedPartIds([]);
-    closeCatalogModal();
-
-    showNotification({
-      title: t`Items Added`,
-      message: t`Successfully added selected items to project requirements.`,
-      color: 'green'
-    });
-  } catch (error: any) {
-    showNotification({
-      title: t`Error`,
-      message: error?.response?.data?.detail || t`Failed to add selected items.`,
-      color: 'red'
-    });
-  } finally {
-    setIsSubmittingParts(false);
-  }
-};
-
-    try {
-      const assemblyPartId = build?.part;
-
-      if (!assemblyPartId) {
-        throw new Error(t`Build order is missing parent assembly part ID`);
+  // Native InvenTree API Form Modal for adding a required item
+  const addRequiredItem = useCreateApiFormModal({
+    url: ApiEndpoints.bom_list,
+    title: t`Add Required Item`,
+    fields: {
+      part: {
+        hidden: true,
+        value: build.part
+      },
+      sub_part: {
+        label: t`Required Item`,
+        type: 'choice',
+        api_url: ApiEndpoints.part_list,
+        required: true,
+        adjust_filters: (filters: any) => {
+          return {
+            ...filters,
+            active: true
+          };
+        }
+      },
+      quantity: {
+        label: t`Required Quantity`,
+        default: 1,
+        required: true
       }
-
-      const results = await Promise.all(
-        selectedPartIds.map((partId) =>
-          api.post(apiUrl(ApiEndpoints.bom_list), {
-            part: assemblyPartId,
-            sub_part: partId,
-            quantity: 1
-          })
-        )
-      );
-
-      const failed = results.filter((r: any) => r?.status && r.status >= 400);
-
-      if (failed.length > 0) {
-        showApiErrorMessage({
-          error: failed,
-          title: t`Failed to add some parts`
-        });
-      } else {
-        notifications.show({
-          title: t`Parts added`,
-          message: t`${selectedPartIds.length} parts added to required parts`,
-          color: 'green',
-          id: 'add-required-parts-success'
-        });
-      }
-
-      setSelectedPartIds([]);
-      closeCatalogModal();
-
-      await buildLineQuery.refetch();
+    },
+    onFormSuccess: () => {
+      buildLineQuery.refetch();
       refreshInstance();
-    } catch (err) {
-      console.error('Failed to add parts to project:', err);
-      showApiErrorMessage({
-        error: err,
-        title: t`Failed to add parts`
-      });
-    } finally {
-      setIsSubmittingParts(false);
     }
-  };
+  });
 
   const buildPanels: PanelType[] = useMemo(() => {
     return [
@@ -347,17 +248,17 @@ const handleAddSelectedParts = async () => {
       },
       {
         name: 'line-items',
-        label: t`Required Parts`,
+        label: t`Required Items`,
         icon: <IconListNumbers />,
         content: (
           <Stack gap='md'>
             <Group justify='space-between'>
-              <Title order={4}>{t`Required Parts`}</Title>
+              <Title order={4}>{t`Required Items`}</Title>
               <Button
                 leftSection={<IconPlus size={16} />}
-                onClick={openCatalogModal}
+                onClick={addRequiredItem.open}
               >
-                {t`Add Required Parts`}
+                {t`Add Required Item`}
               </Button>
             </Group>
             <BuildLinesPanel
@@ -372,21 +273,19 @@ const handleAddSelectedParts = async () => {
         name: 'purchase-orders',
         label: t`Purchase Orders`,
         icon: <IconShoppingCart />,
-        content: (
-                <PurchaseOrderTable
-                  params={{
-                    build: build.pk // Filters POs linked to this specific project
-                  }}
-                  allowAdd={true}
-                  defaultFormData={{
-                    build: build.pk // Pre-links new POs to this project
-                  }}
-                />
-              )
-            },
-            // ... attachments, notes, etc.
-          ];
-        }, [build]);
+        content: build.pk ? (
+          <PurchaseOrderTable
+            {...({
+              params: {
+                project_code: build.reference,
+                outstanding: true
+              }
+            } as any)}
+          />
+        ) : (
+          <Skeleton />
+        )
+      },
       AttachmentPanel({
         model_type: ModelType.build,
         model_id: build.pk
@@ -407,7 +306,7 @@ const handleAddSelectedParts = async () => {
     buildLineQuery.isFetching,
     buildLineQuery.isLoading,
     buildLineData,
-    openCatalogModal
+    addRequiredItem.open
   ]);
 
   const editBuildOrderFields = useBuildOrderFields({
@@ -605,75 +504,7 @@ const handleAddSelectedParts = async () => {
       {holdOrder.modal}
       {issueOrder.modal}
       {completeOrder.modal}
-
-{/* Interactive Catalog Multi-Selection Modal */}
-<Modal
-  opened={catalogModalOpened}
-  onClose={() => {
-    setSelectedPartIds([]);
-    closeCatalogModal();
-  }}
-  title={t`Select Required Items from Catalog`}
-  size='85%'
->
-  <Stack gap='md'>
-    <ScrollArea h={500}>
-      <PartListTable
-        allowAdd={false}
-        enableReports={false}
-        enableLabels={false}
-        props={
-          {
-            enableSelection: true,
-            onSelectedStateChange: (selectedRows: any[]) => {
-              if (Array.isArray(selectedRows)) {
-                const ids = selectedRows
-                  .map((r) => (typeof r === 'number' ? r : (r?.pk ?? r?.id)))
-                  .filter((id): id is number => typeof id === 'number' && !isNaN(id));
-                setSelectedPartIds(ids);
-              }
-            },
-            onSelectedRecordsChange: (selectedRows: any[]) => {
-              if (Array.isArray(selectedRows)) {
-                const ids = selectedRows
-                  .map((r) => (typeof r === 'number' ? r : (r?.pk ?? r?.id)))
-                  .filter((id): id is number => typeof id === 'number' && !isNaN(id));
-                setSelectedPartIds(ids);
-              }
-            },
-            params: {
-              active: true
-            }
-          } as any
-        }
-      />
-    </ScrollArea>
-    <Group justify='space-between' mt='md'>
-      <Text size='sm' fw={500}>
-        {selectedPartIds.length} {t`items selected`}
-      </Text>
-      <Group>
-        <Button
-          variant='default'
-          onClick={() => {
-            setSelectedPartIds([]);
-            closeCatalogModal();
-          }}
-        >
-          {t`Cancel`}
-        </Button>
-        <Button
-          color='green'
-          disabled={selectedPartIds.length === 0}
-          loading={isSubmittingParts}
-          onClick={handleAddSelectedParts}
-        >
-          {t`Add Selected Items (${selectedPartIds.length})`}
-        </Button>
-      </Group>
-    </Group>
-  </Stack>
-</Modal>
+      {addRequiredItem.modal}
 
       <InstanceDetail query={instanceQuery} requiredRole={UserRoles.build}>
         <Stack gap='xs'>

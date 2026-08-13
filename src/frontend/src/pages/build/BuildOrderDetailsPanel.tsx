@@ -1,4 +1,3 @@
-import { t } from '@lingui/core/macro';
 import {
   Badge,
   Grid,
@@ -12,8 +11,6 @@ import {
 import {
   IconCalendar,
   IconChecklist,
-  IconInfoCircle,
-  IconMapPin,
   IconUser
 } from '@tabler/icons-react';
 import { useMemo } from 'react';
@@ -82,7 +79,7 @@ export function BuildOrderDetailsPanel({
         <Paper p='md' withBorder radius='md' h='100%'>
           <Stack gap='xs'>
             <Group justify='space-between'>
-              <Title order={4}>{instance.description || t`Project Details`}</Title>
+              <Title order={4}>{instance.description || 'Project Details'}</Title>
               <StatusRenderer
                 status={instance.status_custom_key || instance.status}
                 type={ModelType.build}
@@ -90,20 +87,20 @@ export function BuildOrderDetailsPanel({
             </Group>
 
             <Group gap='xs' mt='xs'>
-              <Text fw={500} size='sm' c='dimmed'>{t`Project Reference`}:</Text>
+              <Text fw={500} size='sm' c='dimmed'>Project Reference:</Text>
               <Badge variant='outline' color='blue'>{instance.reference}</Badge>
             </Group>
 
             {clientTag && (
               <Group gap='xs'>
-                <Text fw={500} size='sm' c='dimmed'>{t`Client / Account`}:</Text>
+                <Text fw={500} size='sm' c='dimmed'>Client / Account:</Text>
                 <Badge color='violet'>{clientTag}</Badge>
               </Group>
             )}
 
             <Stack gap={2} mt='xs'>
-              <Text fw={500} size='sm' c='dimmed'>{t`Project Purpose / Scope`}:</Text>
-              <Text size='sm'>{instance.description || t`No description provided.`}</Text>
+              <Text fw={500} size='sm' c='dimmed'>Project Purpose / Scope:</Text>
+              <Text size='sm'>{instance.description || 'No description provided.'}</Text>
             </Stack>
           </Stack>
         </Paper>
@@ -115,23 +112,23 @@ export function BuildOrderDetailsPanel({
           <Stack gap='xs'>
             <Group gap='xs'>
               <IconChecklist size={20} color='gray' />
-              <Title order={5}>{t`Material Readiness`}</Title>
+              <Title order={5}>Material Readiness</Title>
             </Group>
 
             <Group justify='space-between' mt='xs'>
-              <Text size='sm'>{t`Total Required Line Items`}:</Text>
-              <Text fw={700} size='sm'>{materialMetrics.totalItems} {t`items`}</Text>
+              <Text size='sm'>Total Required Line Items:</Text>
+              <Text fw={700} size='sm'>{materialMetrics.totalItems} items</Text>
             </Group>
 
             <Group justify='space-between'>
-              <Text size='sm'>{t`Items Fully In Stock`}:</Text>
+              <Text size='sm'>Items Fully In Stock:</Text>
               <Text fw={700} size='sm' c={materialMetrics.percentReady === 100 ? 'green' : 'orange'}>
                 {materialMetrics.itemsInStock} / {materialMetrics.totalItems} ({materialMetrics.percentReady}%)
               </Text>
             </Group>
 
             <Stack gap={4} mt='xs'>
-              <Text size='xs' c='dimmed'>{t`Overall Stock Readiness`}</Text>
+              <Text size='xs' c='dimmed'>Overall Stock Readiness</Text>
               <Progress
                 value={materialMetrics.percentReady}
                 color={materialMetrics.percentReady === 100 ? 'green' : 'blue'}
@@ -149,11 +146,11 @@ export function BuildOrderDetailsPanel({
           <Stack gap='xs'>
             <Group gap='xs'>
               <IconUser size={18} />
-              <Text fw={600} size='sm'>{t`Team & Locations`}</Text>
+              <Text fw={600} size='sm'>Team & Locations</Text>
             </Group>
 
             <Group justify='space-between'>
-              <Text size='sm' c='dimmed'>{t`Project Lead`}:</Text>
+              <Text size='sm' c='dimmed'>Project Lead:</Text>
               {instance.responsible_detail ? (
                 <RenderUser user={instance.responsible_detail} />
               ) : (
@@ -162,7 +159,7 @@ export function BuildOrderDetailsPanel({
             </Group>
 
             <Group justify='space-between'>
-              <Text size='sm' c='dimmed'>{t`Created By`}:</Text>
+              <Text size='sm' c='dimmed'>Created By:</Text>
               {instance.issued_by_detail ? (
                 <RenderUser user={instance.issued_by_detail} />
               ) : (
@@ -171,7 +168,7 @@ export function BuildOrderDetailsPanel({
             </Group>
 
             <Group justify='space-between'>
-              <Text size='sm' c='dimmed'>{t`Staging Location`}:</Text>
+              <Text size='sm' c='dimmed'>Staging Location:</Text>
               {instance.take_from_detail ? (
                 <RenderStockLocation instance={instance.take_from_detail} />
               ) : (
@@ -188,18 +185,18 @@ export function BuildOrderDetailsPanel({
           <Stack gap='xs'>
             <Group gap='xs'>
               <IconCalendar size={18} />
-              <Text fw={600} size='sm'>{t`Project Timeline`}</Text>
+              <Text fw={600} size='sm'>Project Timeline</Text>
             </Group>
 
             <Group justify='space-between'>
-              <Text size='sm' c='dimmed'>{t`Date Created`}:</Text>
+              <Text size='sm' c='dimmed'>Date Created:</Text>
               <Text size='sm'>{instance.creation_date || '-'}</Text>
             </Group>
 
             <Group justify='space-between'>
-              <Text size='sm' c='dimmed'>{t`Target Completion`}:</Text>
+              <Text size='sm' c='dimmed'>Target Completion:</Text>
               <Text size='sm' fw={500}>
-                {instance.target_date || t`No target date set`}
+                {instance.target_date || 'No target date set'}
               </Text>
             </Group>
           </Stack>

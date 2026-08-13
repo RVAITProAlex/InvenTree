@@ -251,7 +251,7 @@ export default function BuildDetail() {
     setIsSubmittingParts(true);
     try {
         // Submit each selected part ID as a BOM requirement for this project's parent part
-        await Promise.all(
+        const results = await Promise.all(
           selectedPartIds.map((partId) =>
             api.post(apiUrl(ApiEndpoints.bom_list), {
               part: build.part,    // ID of the project/assembly item

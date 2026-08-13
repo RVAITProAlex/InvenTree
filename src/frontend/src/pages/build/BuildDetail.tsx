@@ -1,4 +1,3 @@
-import { t } from '@lingui/core/macro';
 import {
   Alert,
   Button,
@@ -66,31 +65,15 @@ import { PartListTable } from '../../tables/part/PartTable';
 import { PurchaseOrderTable } from '../../tables/purchasing/PurchaseOrderTable';
 import { BuildOrderDetailsPanel } from './BuildOrderDetailsPanel';
 
-function NoItems() {
-  return (
-    <Alert color='blue' icon={<IconInfoCircle />} title={t`No Required Items`}>
-      <Stack gap='xs'>
-        <Text>{t`This build order does not have any required items.`}</Text>
-        <Text>{t`The assembled part may not have a Bill of Materials (BOM) defined, or the BOM is empty.`}</Text>
-      </Stack>
-    </Alert>
-  );
-}
-
-/**
- * Panel to display the lines of a build order
- */
 /**
  * Panel to display the lines of a build order / project
  */
 function BuildLinesPanel({
   build,
-  isLoading,
-  hasItems
+  isLoading
 }: Readonly<{
   build: any;
   isLoading: boolean;
-  hasItems: boolean;
 }>) {
   const buildLocation = useInstance({
     endpoint: ApiEndpoints.stock_location_list,
@@ -106,7 +89,7 @@ function BuildLinesPanel({
   return (
     <Stack gap='xs'>
       {buildLocation.instance.pk && (
-        <Alert color='blue' icon={<IconSitemap />} title={t`Source Location`}>
+        <Alert color='blue' icon={<IconSitemap />} title='Source Location'>
           <RenderStockLocation instance={buildLocation.instance} />
         </Alert>
       )}
@@ -138,17 +121,6 @@ export default function BuildDetail() {
       .filter((id): id is number => typeof id === 'number' && !isNaN(id));
   }, [selectedParts]);
 
-  // Bind selection state directly to Mantine DataTable
-  const catalogTableProps = useMemo(
-    () => ({
-      enableSelection: true,
-      selectedRecords: selectedParts,
-      onSelectedRecordsChange: setSelectedParts,
-      params: { active: true }
-    }),
-    [selectedParts]
-  );
-
   // Fetch BOM items count
   const { instance: buildLineData, instanceQuery: buildLineQuery } =
     useInstance({
@@ -166,39 +138,6 @@ export default function BuildDetail() {
       defaultValue: {}
     });
 
-  // Fetch subassembly BOM items count
-  const { instance: subassemblyLineData } = useInstance({
-    endpoint: ApiEndpoints.build_line_list,
-    params: {
-      build: id,
-      allocations: false,
-      part_detail: false,
-      build_detail: false,
-      bom_item_detail: false,
-      assembly: true,
-      limit: 1
-    },
-    disabled: !id,
-    hasPrimaryKey: false,
-    defaultValue: {}
-  });
-
-  // Fetch child builds count
-  const { instance: childBuildData } = useInstance({
-    endpoint: ApiEndpoints.build_order_list,
-    params: {
-      parent: id,
-      limit: 1
-    },
-    disabled: !id,
-    hasPrimaryKey: false,
-    defaultValue: {}
-  });
-
-  const showChildBuilds = useMemo(() => {
-    return childBuildData?.count > 0 || subassemblyLineData?.count > 0;
-  }, [childBuildData, subassemblyLineData]);
-
   const buildStatus = useStatusCodes({ modelType: ModelType.build });
 
   const {
@@ -210,14 +149,18 @@ export default function BuildDetail() {
     pk: id,
     params: {
       part_detail: true,
-      tags: true
+      tags: true,
+      responsible_detail: true,
+      issued_by_detail: true,
+      take_from_detail: true,
+      location_detail: true
     },
     hasPrimaryKey: true,
     defaultValue: {},
     refetchOnMount: true
   });
-  
-// Batch-add or consolidate selected catalog parts into the build assembly's BOM
+
+  // Consolidate or batch-add selected catalog parts into BOM
   const handleAddSelectedParts = async () => {
     if (selectedPartIds.length === 0) return;
     setIsSubmittingParts(true);
@@ -226,16 +169,16 @@ export default function BuildDetail() {
       const assemblyPartId = build?.part;
 
       if (!assemblyPartId) {
-        throw new Error(t`Build order is missing parent assembly part ID`);
+        throw new Error('Build order is missing parent assembly part ID');
       }
 
-      // 1. Group selected IDs to calculate quantities to add per unique part
+      // Group selected IDs
       const partCounts: Record<number, number> = {};
       for (const id of selectedPartIds) {
         partCounts[id] = (partCounts[id] || 0) + 1;
       }
 
-      // 2. Fetch existing BOM items for this assembly
+      // Fetch existing BOM items
       const existingBomResponse = await api.get(apiUrl(ApiEndpoints.bom_list), {
         params: { part: assemblyPartId }
       });
@@ -244,7 +187,6 @@ export default function BuildDetail() {
         ? existingBomResponse.data
         : existingBomResponse?.data?.results || [];
 
-      // 3. Consolidate with existing lines or post new lines
       for (const [partIdStr, qtyToAdd] of Object.entries(partCounts)) {
         const partId = Number(partIdStr);
         const existingItem = existingBomItems.find(
@@ -253,13 +195,11 @@ export default function BuildDetail() {
         );
 
         if (existingItem) {
-          // Update existing line by incrementing quantity
           const currentQty = Number(existingItem.quantity) || 0;
           await api.patch(apiUrl(ApiEndpoints.bom_list, existingItem.pk), {
             quantity: currentQty + qtyToAdd
           });
         } else {
-          // Create new line
           await api.post(apiUrl(ApiEndpoints.bom_list), {
             part: assemblyPartId,
             sub_part: partId,
@@ -269,8 +209,8 @@ export default function BuildDetail() {
       }
 
       notifications.show({
-        title: t`Required Items Updated`,
-        message: t`Items consolidated into project list successfully`,
+        title: 'Required Items Updated',
+        message: 'Items consolidated into project list successfully',
         color: 'green',
         id: 'add-required-parts-success'
       });
@@ -284,7 +224,7 @@ export default function BuildDetail() {
       console.error('Failed to update project parts:', err);
       showApiErrorMessage({
         error: err,
-        title: t`Failed to update parts`
+        title: 'Failed to update parts'
       });
     } finally {
       setIsSubmittingParts(false);
@@ -294,20 +234,15 @@ export default function BuildDetail() {
   // Form modal to create a new Purchase Order linked to this project
   const createPurchaseOrderModal = useCreateApiFormModal({
     url: ApiEndpoints.purchase_order_list,
-    title: t`Create Purchase Order for Project`,
+    title: 'Create Purchase Order for Project',
     modalId: 'create-po-for-project',
     fields: {
       supplier: {},
       reference: {},
       description: {},
-      external_build: {
-        hidden: true,
-        value: build.pk
-      },
       target_date: {}
     },
     initialData: {
-      external_build: build.pk,
       description: `Purchase order for Project ${build.reference || ''}`
     },
     onFormSuccess: refreshInstance
@@ -317,55 +252,53 @@ export default function BuildDetail() {
     return [
       {
         name: 'details',
-        label: t`Project Info`,
+        label: 'Project Info',
         icon: <IconInfoCircle />,
         content: (
           <BuildOrderDetailsPanel
             instance={build}
-            allowImageEdit
             refreshInstance={refreshInstance}
           />
         )
       },
       {
         name: 'line-items',
-        label: t`Required Items`,
+        label: 'Required Items',
         icon: <IconListNumbers />,
         content: (
           <Stack gap='md'>
             <Group justify='space-between'>
-              <Title order={4}>{t`Required Items`}</Title>
+              <Title order={4}>Required Items</Title>
               <Button
                 leftSection={<IconPlus size={16} />}
                 onClick={openCatalogModal}
               >
-                {t`Select from Catalog`}
+                Select from Catalog
               </Button>
             </Group>
             <BuildLinesPanel
               build={build}
               isLoading={buildLineQuery.isFetching || buildLineQuery.isLoading}
-              hasItems={buildLineData?.count > 0}
             />
           </Stack>
         )
       },
       {
         name: 'purchase-orders',
-        label: t`Purchase Orders`,
+        label: 'Purchase Orders',
         icon: <IconShoppingCart />,
         content: build.pk ? (
           <Stack gap='md'>
             <Group justify='space-between'>
-              <Title order={4}>{t`Project Purchase Orders`}</Title>
+              <Title order={4}>Project Purchase Orders</Title>
               <Button
                 leftSection={<IconPlus size={16} />}
                 onClick={createPurchaseOrderModal.open}
               >
-                {t`Create Purchase Order for Project`}
+                Create Purchase Order
               </Button>
             </Group>
-            <PurchaseOrderTable params={{ external_build: build.pk }} />
+            <PurchaseOrderTable />
           </Stack>
         ) : (
           <Skeleton />
@@ -387,10 +320,8 @@ export default function BuildDetail() {
     user,
     buildStatus,
     globalSettings,
-    showChildBuilds,
     buildLineQuery.isFetching,
     buildLineQuery.isLoading,
-    buildLineData,
     openCatalogModal,
     createPurchaseOrderModal.open
   ]);
@@ -403,7 +334,7 @@ export default function BuildDetail() {
   const editBuild = useEditApiFormModal({
     url: ApiEndpoints.build_order_list,
     pk: build.pk,
-    title: t`Edit Build Order`,
+    title: 'Edit Build Order',
     modalId: 'edit-build-order',
     fields: editBuildOrderFields,
     queryParams: new URLSearchParams({ tags: 'true' }),
@@ -424,7 +355,7 @@ export default function BuildDetail() {
 
   const duplicateBuild = useCreateApiFormModal({
     url: ApiEndpoints.build_order_list,
-    title: t`Add Build Order`,
+    title: 'Add Build Order',
     modalId: 'duplicate-build-order',
     fields: duplicateBuildOrderFields,
     initialData: duplicateBuildOrderInitialData,
@@ -434,10 +365,10 @@ export default function BuildDetail() {
 
   const cancelOrder = useCreateApiFormModal({
     url: apiUrl(ApiEndpoints.build_order_cancel, build.pk),
-    title: t`Cancel Build Order`,
+    title: 'Cancel Build Order',
     onFormSuccess: refreshInstance,
-    successMessage: t`Order cancelled`,
-    preFormWarning: t`Cancel this order`,
+    successMessage: 'Order cancelled',
+    preFormWarning: 'Cancel this order',
     fields: {
       remove_allocated_stock: {},
       remove_incomplete_outputs: {}
@@ -446,18 +377,18 @@ export default function BuildDetail() {
 
   const holdOrder = useCreateApiFormModal({
     url: apiUrl(ApiEndpoints.build_order_hold, build.pk),
-    title: t`Hold Build Order`,
+    title: 'Hold Build Order',
     onFormSuccess: refreshInstance,
-    preFormWarning: t`Place this order on hold`,
-    successMessage: t`Order placed on hold`
+    preFormWarning: 'Place this order on hold',
+    successMessage: 'Order placed on hold'
   });
 
   const issueOrder = useCreateApiFormModal({
     url: apiUrl(ApiEndpoints.build_order_issue, build.pk),
-    title: t`Issue Build Order`,
+    title: 'Issue Build Order',
     onFormSuccess: refreshInstance,
-    preFormWarning: t`Issue this order`,
-    successMessage: t`Order issued`
+    preFormWarning: 'Issue this order',
+    successMessage: 'Order issued'
   });
 
   const completeOrderFields: ApiFormFieldSet = useMemo(() => {
@@ -476,16 +407,16 @@ export default function BuildDetail() {
 
   const completeOrder = useCreateApiFormModal({
     url: apiUrl(ApiEndpoints.build_order_complete, build.pk),
-    title: t`Complete Build Order`,
+    title: 'Complete Build Order',
     onFormSuccess: refreshInstance,
     preFormContent: (
       <Alert
         color='green'
         icon={<IconCircleCheck />}
-        title={t`Mark this order as complete`}
+        title='Mark this order as complete'
       />
     ),
-    successMessage: t`Order completed`,
+    successMessage: 'Order completed',
     fields: completeOrderFields
   });
 
@@ -512,14 +443,14 @@ export default function BuildDetail() {
 
     return [
       <PrimaryActionButton
-        title={t`Issue Order`}
+        title='Issue Order'
         icon='issue'
         hidden={!canIssue}
         color='blue'
         onClick={issueOrder.open}
       />,
       <PrimaryActionButton
-        title={t`Complete Order`}
+        title='Complete Order'
         icon='complete'
         hidden={!canComplete}
         color='green'
@@ -538,25 +469,25 @@ export default function BuildDetail() {
         enableReports
       />,
       <OptionsActionDropdown
-        tooltip={t`Build Order Actions`}
+        tooltip='Build Order Actions'
         actions={[
           EditItemAction({
             onClick: () => editBuild.open(),
             hidden: !canEdit,
-            tooltip: t`Edit order`
+            tooltip: 'Edit order'
           }),
           DuplicateItemAction({
             onClick: () => duplicateBuild.open(),
-            tooltip: t`Duplicate order`,
+            tooltip: 'Duplicate order',
             hidden: !user.hasAddRole(UserRoles.build)
           }),
           HoldItemAction({
-            tooltip: t`Hold order`,
+            tooltip: 'Hold order',
             hidden: !canHold,
             onClick: holdOrder.open
           }),
           CancelItemAction({
-            tooltip: t`Cancel order`,
+            tooltip: 'Cancel order',
             onClick: cancelOrder.open,
             hidden: !canCancel
           })
@@ -575,7 +506,7 @@ export default function BuildDetail() {
             options={{ size: 'lg' }}
           />,
           <DetailsBadge
-            label={t`External`}
+            label='External'
             color='blue'
             visible={build.external}
           />
@@ -592,31 +523,31 @@ export default function BuildDetail() {
       {completeOrder.modal}
       {createPurchaseOrderModal.modal}
 
-      {/* Interactive Catalog Multi-Selection Modal */}
+      {/* Catalog Modal */}
       <Modal
         opened={catalogModalOpened}
         onClose={() => {
           setSelectedParts([]);
           closeCatalogModal();
         }}
-        title={t`Select Required Items from Catalog`}
+        title='Select Required Items from Catalog'
         size='85%'
       >
         <Stack gap='md'>
           <ScrollArea h={500}>
-          <PartListTable
-            allowAdd={false}
-            enableReports={false}
-            enableLabels={false}
-            onSelectedRecordsChange={setSelectedParts}
-            props={{
-              params: { active: true }
-            }}
-          />
+            <PartListTable
+              allowAdd={false}
+              enableReports={false}
+              enableLabels={false}
+              onSelectedRecordsChange={setSelectedParts}
+              props={{
+                params: { active: true }
+              }}
+            />
           </ScrollArea>
           <Group justify='space-between' mt='md'>
             <Text size='sm' fw={500}>
-              {selectedPartIds.length} {t`items selected`}
+              {selectedPartIds.length} items selected
             </Text>
             <Group>
               <Button
@@ -626,7 +557,7 @@ export default function BuildDetail() {
                   closeCatalogModal();
                 }}
               >
-                {t`Cancel`}
+                Cancel
               </Button>
               <Button
                 color='green'
@@ -634,7 +565,7 @@ export default function BuildDetail() {
                 loading={isSubmittingParts}
                 onClick={handleAddSelectedParts}
               >
-                {t`Add Selected Items (${selectedPartIds.length})`}
+                Add Selected Items ({selectedPartIds.length})
               </Button>
             </Group>
           </Group>
@@ -644,13 +575,13 @@ export default function BuildDetail() {
       <InstanceDetail query={instanceQuery} requiredRole={UserRoles.build}>
         <Stack gap='xs'>
           <PageDetail
-            title={`${t`Build Order`}: ${build.reference}`}
+            title={`Build Order: ${build.reference}`}
             subtitle={`${build.quantity} x ${build.part_detail?.full_name}`}
             badges={buildBadges}
             editAction={editBuild.open}
             editEnabled={user.hasChangePermission(ModelType.part)}
             imageUrl={build.part_detail?.image ?? build.part_detail?.thumbnail}
-            breadcrumbs={[{ name: t`Projects`, url: '/projects' }]}
+            breadcrumbs={[{ name: 'Projects', url: '/projects' }]}
             lastCrumb={[
               {
                 name: build.reference,

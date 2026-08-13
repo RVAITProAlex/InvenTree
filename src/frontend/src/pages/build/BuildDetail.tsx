@@ -309,7 +309,7 @@ export default function BuildDetail() {
         label: t`Purchase Orders`,
         icon: <IconShoppingCart />,
         content: build.pk ? (
-          <PurchaseOrderTable externalBuildId={build.pk} />
+          <PurchaseOrderTable />
         ) : (
           <Skeleton />
         )
@@ -549,30 +549,18 @@ export default function BuildDetail() {
               allowAdd={false}
               enableReports={false}
               enableLabels={false}
-              props={
-                {
-                  enableSelection: true,
-                  onSelectedStateChange: (selectedRows: any[]) => {
-                    if (Array.isArray(selectedRows)) {
-                      const ids = selectedRows
-                        .map((r) => (typeof r === 'number' ? r : (r?.pk ?? r?.id)))
-                        .filter((id): id is number => typeof id === 'number' && !isNaN(id));
-                      setSelectedPartIds(ids);
-                    }
-                  },
-                  onSelectedRecordsChange: (selectedRows: any[]) => {
-                    if (Array.isArray(selectedRows)) {
-                      const ids = selectedRows
-                        .map((r) => (typeof r === 'number' ? r : (r?.pk ?? r?.id)))
-                        .filter((id): id is number => typeof id === 'number' && !isNaN(id));
-                      setSelectedPartIds(ids);
-                    }
-                  },
-                  params: {
-                    active: true
-                  }
-                } as any
-              }
+              enableSelection={true}
+              onSelectedStateChange={(selectedRows: any[]) => {
+                if (Array.isArray(selectedRows)) {
+                  const ids = selectedRows
+                    .map((r) => (typeof r === 'number' ? r : (r?.pk ?? r?.id)))
+                    .filter((id): id is number => typeof id === 'number' && !isNaN(id));
+                  setSelectedPartIds(ids);
+                }
+              }}
+              params={{
+                active: true
+              }}
             />
           </ScrollArea>
           <Group justify='space-between' mt='md'>

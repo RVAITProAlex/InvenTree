@@ -1,7 +1,6 @@
 import { t } from '@lingui/core/macro';
 import {
   Badge,
-  Card,
   Grid,
   Group,
   Paper,
@@ -11,20 +10,20 @@ import {
   Title
 } from '@mantine/core';
 import {
+  IconBoxes,
   IconCalendar,
   IconChecklist,
   IconInfoCircle,
   IconMapPin,
-  IconPackageCheck,
   IconUser
 } from '@tabler/icons-react';
 import { useMemo } from 'react';
 
 import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
-import { RenderUser } from '../../components/render/User';
+import { ModelType } from '@lib/enums/ModelType';
 import { RenderStockLocation } from '../../components/render/Stock';
 import { StatusRenderer } from '../../components/render/StatusRenderer';
-import { ModelType } from '@lib/enums/ModelType';
+import { RenderUser } from '../../components/render/User';
 import { useInstance } from '../../hooks/UseInstance';
 
 export function BuildOrderDetailsPanel({
@@ -51,7 +50,7 @@ export function BuildOrderDetailsPanel({
   const materialMetrics = useMemo(() => {
     const lines = Array.isArray(lineData) ? lineData : lineData?.results || [];
     const totalItems = lines.length;
-    
+
     let itemsInStock = 0;
     lines.forEach((line: any) => {
       const available = line.available_stock ?? 0;
@@ -116,7 +115,7 @@ export function BuildOrderDetailsPanel({
         <Paper p='md' withBorder radius='md' h='100%'>
           <Stack gap='xs'>
             <Group gap='xs'>
-              <IconPackageCheck size={20} color='gray' />
+              <IconBoxes size={20} color='gray' />
               <Title order={5}>{t`Material Readiness`}</Title>
             </Group>
 
@@ -143,7 +142,7 @@ export function BuildOrderDetailsPanel({
         </Paper>
       </Grid.Col>
 
-      {/* Box 3: Lead & Location */}
+      {/* Box 3: Team & Location */}
       <Grid.Col span={{ base: 12, md: 6 }}>
         <Paper p='md' withBorder radius='md'>
           <Stack gap='xs'>

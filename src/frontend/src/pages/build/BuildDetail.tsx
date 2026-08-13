@@ -247,7 +247,6 @@ export default function BuildDetail() {
 
   // Batch-add selected catalog parts to the build assembly's BOM
   const handleAddSelectedParts = async () => {
-    if (selectedPartIds.length === 0) return;
     setIsSubmittingParts(true);
     try {
         // Submit each selected part ID as a BOM requirement for this project's parent part

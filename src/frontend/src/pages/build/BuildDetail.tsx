@@ -132,6 +132,9 @@ export default function BuildDetail() {
   const user = useUserState();
   const globalSettings = useGlobalSettingsState();
 
+  // Call hook at top level of component
+  const bomFields = bomItemFields({ showAssembly: false });
+
   // Fetch the number of BOM items associated with the build order
   const { instance: buildLineData, instanceQuery: buildLineQuery } =
     useInstance({
@@ -202,13 +205,13 @@ export default function BuildDetail() {
 
   const newBomItemFields: ApiFormFieldSet = useMemo(() => {
     return {
-      ...bomItemFields({ showAssembly: false }),
+      ...bomFields,
       part: {
         hidden: true,
         value: build.part
       }
     };
-  }, [build.part]);
+  }, [bomFields, build.part]);
 
   // Native InvenTree API Form Modal for adding a required item
   const addRequiredItem = useCreateApiFormModal({

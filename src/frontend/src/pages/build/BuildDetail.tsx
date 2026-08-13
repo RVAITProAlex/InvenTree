@@ -246,40 +246,41 @@ export default function BuildDetail() {
   });
 
   // Batch-add selected catalog parts to the build assembly's BOM
-  const handleAddSelectedParts = async () => {
-    setIsSubmittingParts(true);
-    try {
-        // Submit each selected part ID as a BOM requirement for this project's parent part
-        const results = await Promise.all(
-          selectedPartIds.map((partId) =>
-            api.post(apiUrl(ApiEndpoints.bom_list), {
-              part: build.part,    // ID of the project/assembly item
-              sub_part: partId,   // ID of the selected required item
-              quantity: 1          // Default required quantity
-            })
-          )
-        );
+const handleAddSelectedParts = async () => {
+  if (!selectedPartIds.length) return;
 
-        // Refresh project page data & clear selection
-        await refreshInstance();
-        setSelectedPartIds([]);
-        closeCatalogModal();
+  setIsSubmittingParts(true);
 
-        showNotification({
-          title: t`Items Added`,
-          message: t`Successfully added selected items to project requirements.`,
-          color: 'green'
-        });
-      } catch (error: any) {
-        showNotification({
-          title: t`Error`,
-          message: error?.response?.data?.detail || t`Failed to add selected items.`,
-          color: 'red'
-        });
-      } finally {
-        setIsSubmittingParts(false);
-      }
-    };
+  try {
+    const results = await Promise.all(
+      selectedPartIds.map((partId) =>
+        api.post(apiUrl(ApiEndpoints.bom_list), {
+          part: build.part,
+          sub_part: partId,
+          quantity: 1
+        })
+      )
+    );
+
+    await refreshInstance();
+    setSelectedPartIds([]);
+    closeCatalogModal();
+
+    showNotification({
+      title: t`Items Added`,
+      message: t`Successfully added selected items to project requirements.`,
+      color: 'green'
+    });
+  } catch (error: any) {
+    showNotification({
+      title: t`Error`,
+      message: error?.response?.data?.detail || t`Failed to add selected items.`,
+      color: 'red'
+    });
+  } finally {
+    setIsSubmittingParts(false);
+  }
+};
 
     try {
       const assemblyPartId = build?.part;

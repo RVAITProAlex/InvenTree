@@ -230,8 +230,8 @@ export default function BuildDetail() {
     defaultValue: {},
     refetchOnMount: true
   });
-
-  // Batch-add selected catalog parts to the build assembly's BOM
+  
+// Batch-add or consolidate selected catalog parts into the build assembly's BOM
   const handleAddSelectedParts = async () => {
     if (selectedPartIds.length === 0) return;
     setIsSubmittingParts(true);
@@ -243,42 +243,62 @@ export default function BuildDetail() {
         throw new Error(t`Build order is missing parent assembly part ID`);
       }
 
-      const results = await Promise.all(
-        selectedPartIds.map((partId) =>
-          api.post(apiUrl(ApiEndpoints.bom_list), {
+      // 1. Group selected IDs to calculate quantities to add per unique part
+      const partCounts: Record<number, number> = {};
+      for (const id of selectedPartIds) {
+        partCounts[id] = (partCounts[id] || 0) + 1;
+      }
+
+      // 2. Fetch existing BOM items for this assembly
+      const existingBomResponse = await api.get(apiUrl(ApiEndpoints.bom_list), {
+        params: { part: assemblyPartId }
+      });
+
+      const existingBomItems: any[] = Array.isArray(existingBomResponse?.data)
+        ? existingBomResponse.data
+        : existingBomResponse?.data?.results || [];
+
+      // 3. Consolidate with existing lines or post new lines
+      for (const [partIdStr, qtyToAdd] of Object.entries(partCounts)) {
+        const partId = Number(partIdStr);
+        const existingItem = existingBomItems.find(
+          (item: any) =>
+            item.sub_part === partId || item.sub_part_detail?.pk === partId
+        );
+
+        if (existingItem) {
+          // Update existing line by incrementing quantity
+          const currentQty = Number(existingItem.quantity) || 0;
+          await api.patch(apiUrl(ApiEndpoints.bom_list, existingItem.pk), {
+            quantity: currentQty + qtyToAdd
+          });
+        } else {
+          // Create new line
+          await api.post(apiUrl(ApiEndpoints.bom_list), {
             part: assemblyPartId,
             sub_part: partId,
-            quantity: 1
-          })
-        )
-      );
-
-      const failed = results.filter((r: any) => r?.status && r.status >= 400);
-
-      if (failed.length > 0) {
-        showApiErrorMessage({
-          error: failed,
-          title: t`Failed to add some parts`
-        });
-      } else {
-        notifications.show({
-          title: t`Parts Added`,
-          message: t`${selectedPartIds.length} items added to required parts list`,
-          color: 'green',
-          id: 'add-required-parts-success'
-        });
+            quantity: qtyToAdd
+          });
+        }
       }
+
+      notifications.show({
+        title: t`Required Items Updated`,
+        message: t`Items consolidated into project list successfully`,
+        color: 'green',
+        id: 'add-required-parts-success'
+      });
 
       setSelectedParts([]);
       closeCatalogModal();
 
       await buildLineQuery.refetch();
       refreshInstance();
-    } catch (err) {
-      console.error('Failed to add parts to project:', err);
+    } catch (err: any) {
+      console.error('Failed to update project parts:', err);
       showApiErrorMessage({
         error: err,
-        title: t`Failed to add parts`
+        title: t`Failed to update parts`
       });
     } finally {
       setIsSubmittingParts(false);

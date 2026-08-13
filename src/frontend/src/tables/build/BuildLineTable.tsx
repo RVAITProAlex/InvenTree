@@ -1,6 +1,6 @@
 import { ActionButton } from '@lib/components/ActionButton';
 import { ProgressBar } from '@lib/components/ProgressBar';
-import { RowEditAction } from '@lib/components/RowActions';
+import { RowDeleteAction, RowEditAction } from '@lib/components/RowActions';
 import { YesNoButton } from '@lib/components/YesNoButton';
 import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
 import { ModelType } from '@lib/enums/ModelType';
@@ -593,6 +593,23 @@ export default function BuildLineTable({
 
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
 
+  // Track BOM Item ID for deletion modal
+  const [selectedBomItemPk, setSelectedBomItemPk] = useState<number | null>(null);
+
+  const deleteBomItemModal = useDeleteApiFormModal({
+    url: ApiEndpoints.bom_list,
+    pk: selectedBomItemPk,
+    title: t`Remove Required Item`,
+    submitText: t`Remove`,
+    successMessage: t`Item removed from required items list`,
+    onFormSuccess: table.refreshTable,
+    preFormContent: (
+      <Alert color='red' title={t`Confirm Removal`}>
+        {t`Are you sure you want to remove this item from the required items list? This will not affect physical inventory stock.`}
+      </Alert>
+    )
+  });
+
   const newBuildOrder = useCreateApiFormModal({
     url: ApiEndpoints.build_order_list,
     title: t`Create Build Order`,
@@ -811,7 +828,7 @@ export default function BuildLineTable({
       const canBuild =
         !consumable && user.hasAddRole(UserRoles.build) && part.assembly;
 
-      return [
+      const actions: RowAction[] = [
         {
           icon: <IconArrowRight />,
           title: t`Allocate Stock`,
@@ -877,8 +894,25 @@ export default function BuildLineTable({
           navigate: navigate
         })
       ];
+
+      // Allow deleting the BOM Item / Required Line from the project
+      const bomItemPk = record.bom_item ?? record.bom_item_detail?.pk;
+      if (bomItemPk) {
+        actions.push(
+          RowDeleteAction({
+            title: t`Remove Item`,
+            tooltip: t`Remove item from project required list`,
+            onClick: () => {
+              setSelectedBomItemPk(bomItemPk);
+              deleteBomItemModal.open();
+            }
+          })
+        );
+      }
+
+      return actions;
     },
-    [user, navigate, output, build, buildStatus, isActive]
+    [user, navigate, output, build, buildStatus, isActive, deleteBomItemModal]
   );
 
   const tableActions = useMemo(() => {
@@ -1047,6 +1081,7 @@ export default function BuildLineTable({
       {deallocateStock.modal}
       {editAllocation.modal}
       {deleteAllocation.modal}
+      {deleteBomItemModal.modal}
       {consumeLines.modal}
       {orderPartsWizard.wizard}
       <InvenTreeTable

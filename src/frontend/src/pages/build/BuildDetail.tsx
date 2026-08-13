@@ -46,6 +46,7 @@ import NotesPanel from '../../components/panels/NotesPanel';
 import { PanelGroup } from '../../components/panels/PanelGroup';
 import { StatusRenderer } from '../../components/render/StatusRenderer';
 import { RenderStockLocation } from '../../components/render/Stock';
+import { bomItemFields } from '../../forms/BomForms';
 import { useBuildOrderFields } from '../../forms/BuildForms';
 import {
   useCreateApiFormModal,
@@ -199,26 +200,21 @@ export default function BuildDetail() {
     refetchOnMount: true
   });
 
+  const newBomItemFields: ApiFormFieldSet = useMemo(() => {
+    return {
+      ...bomItemFields({ showAssembly: false }),
+      part: {
+        hidden: true,
+        value: build.part
+      }
+    };
+  }, [build.part]);
+
   // Native InvenTree API Form Modal for adding a required item
   const addRequiredItem = useCreateApiFormModal({
     url: ApiEndpoints.bom_list,
     title: t`Add Required Item`,
-    fields: {
-      part: {
-        hidden: true,
-        value: build.part
-      },
-      sub_part: {
-          filters: {
-            active: true
-          }
-          }
-        }
-      },
-      quantity: {
-        value: 1
-      }
-    },
+    fields: newBomItemFields,
     onFormSuccess: () => {
       buildLineQuery.refetch();
       refreshInstance();

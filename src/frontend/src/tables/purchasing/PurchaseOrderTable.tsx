@@ -6,6 +6,7 @@ import type { TableColumn, InvenTreeTableProps } from '@lib/types/Tables';
 import { t } from '@lingui/core/macro';
 import { useCallback, useEffect, useMemo } from 'react';
 import { InvenTreeTable } from '../../components/tables/InvenTreeTable';
+import { StatusRenderer } from '../../components/render/StatusRenderer';
 
 /**
  * Construct list of columns for Purchase Order Table
@@ -48,7 +49,13 @@ function purchaseOrderColumns(): TableColumn[] {
     {
       accessor: 'status',
       title: t`Order Status`,
-      sortable: true
+      sortable: true,
+      render: (record: any) => (
+        <StatusRenderer
+          status={record.status_custom_key || record.status}
+          type={ModelType.purchaseorder}
+        />
+      )
     },
     {
       accessor: 'target_date',

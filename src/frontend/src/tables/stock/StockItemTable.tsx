@@ -1,506 +1,159 @@
-import { t } from '@lingui/core/macro';
-import { useMemo, useState } from 'react';
-
-import { ActionButton } from '@lib/components/ActionButton';
-import { AddItemButton } from '@lib/components/AddItemButton';
+import { Badge, Group } from '@mantine/core';
 import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
 import { ModelType } from '@lib/enums/ModelType';
-import { UserRoles } from '@lib/enums/Roles';
 import { apiUrl } from '@lib/functions/Api';
 import useTable from '@lib/hooks/UseTable';
-import type { TableFilter } from '@lib/types/Filters';
-import type { StockOperationProps } from '@lib/types/Forms';
-import type { TableColumn } from '@lib/types/Tables';
-import {
-  DateColumn,
-  DescriptionColumn,
-  IPNColumn,
-  LocationColumn,
-  PartColumn,
-  StatusColumn,
-  StockColumn
-} from '../../components/tables/ColumnRenderers';
-import {
-  BatchFilter,
-  CreatedAfterFilter,
-  CreatedBeforeFilter,
-  HasBatchCodeFilter,
-  InStockFilter,
-  IncludeVariantsFilter,
-  IsSerializedFilter,
-  ManufacturerFilter,
-  SerialFilter,
-  SerialGTEFilter,
-  SerialLTEFilter,
-  StatusFilterOptions,
-  SupplierFilter,
-  TagsFilter,
-  UpdatedAfterFilter,
-  UpdatedBeforeFilter
-} from '../../components/tables/Filter';
+import type { TableColumn, InvenTreeTableProps } from '@lib/types/Tables';
+import { t } from '@lingui/core/macro';
+import { useMemo } from 'react';
 import { InvenTreeTable } from '../../components/tables/InvenTreeTable';
-import OrderPartsWizard from '../../components/wizards/OrderPartsWizard';
-import { formatCurrency, formatPriceRange } from '../../defaults/formatters';
-import { useStockFields } from '../../forms/StockForms';
-import { InvenTreeIcon } from '../../functions/icons';
-import { useCreateApiFormModal } from '../../hooks/UseForm';
-import { useStockAdjustActions } from '../../hooks/UseStockAdjustActions';
-import { useGlobalSettingsState } from '../../states/SettingsStates';
-import { useUserState } from '../../states/UserState';
+import { StatusRenderer } from '../../components/render/StatusRenderer';
+import { RenderStockLocation } from '../../components/render/Stock';
 
 /**
- * Construct a list of columns for the stock item table
+ * Construct list of columns for Stock Item Table
  */
-function stockItemTableColumns({
-  showLocation,
-  showPricing
-}: {
-  showLocation: boolean;
-  showPricing: boolean;
-}): TableColumn[] {
+function stockItemColumns(): TableColumn[] {
   return [
-    PartColumn({
-      accessor: 'part',
-      part: 'part_detail',
-      filter: ['active']
-    }),
-    IPNColumn({}),
     {
-      accessor: 'part_detail.revision',
-      title: t`Revision`,
+      accessor: 'part_detail.name',
+      title: t`Inventory`,
       sortable: true,
-      defaultVisible: false
+      switchable: false,
+      render: (record: any) =>
+        record.part_detail?.full_name || record.part_detail?.name || '-'
     },
-    DescriptionColumn({
-      accessor: 'part_detail.description'
-    }),
-    StockColumn({
-      accessor: '',
-      title: t`Stock`,
-      sortable: true,
-      ordering: 'stock',
-      filter: [
-        'available',
-        'allocated',
-        'consumed',
-        'installed',
-        'in_stock',
-        'sent_to_customer'
-      ]
-    }),
-    StatusColumn({ model: ModelType.stockitem }),
     {
-      accessor: 'batch',
-      sortable: true,
-      copyable: true,
-      filter: ['has_batch_code', 'batch']
+      accessor: 'part_detail.IPN',
+      title: t`IPN`,
+      sortable: true
     },
-    LocationColumn({
-      hidden: !showLocation,
-      accessor: 'location_detail'
-    }),
     {
-      accessor: 'purchase_order',
-      title: t`Purchase Order`,
-      defaultVisible: false,
+      accessor: 'part_detail.description',
+      title: t`Description`,
+      sortable: true
+    },
+    {
+      accessor: 'tags',
+      title: t`Tags`,
+      sortable: false,
+      switchable: true,
       render: (record: any) => {
-        return record.purchase_order_reference;
+        const itemTags = Array.isArray(record?.tags) ? record.tags : [];
+        const partTags = Array.isArray(record?.part_detail?.tags)
+          ? record.part_detail.tags
+          : [];
+        const allTags = Array.from(new Set([...itemTags, ...partTags]));
+
+        if (allTags.length === 0) return '-';
+
+        return (
+          <Group gap={4} wrap="nowrap">
+            {allTags.map((tag: string) => (
+              <Badge key={tag} size="xs" variant="outline" color="blue">
+                {tag}
+              </Badge>
+            ))}
+          </Group>
+        );
       }
     },
     {
-      accessor: 'SKU',
-      title: t`Supplier Inventory`,
+      accessor: 'quantity',
+      title: t`Stock`,
       sortable: true,
-      defaultVisible: false,
-      copyable: true
-    },
-    {
-      accessor: 'MPN',
-      title: t`Manufacturer Part`,
-      sortable: true,
-      defaultVisible: false,
-      copyable: true
-    },
-    {
-      accessor: 'purchase_price',
-      title: t`Unit Price`,
-      sortable: true,
-      switchable: true,
-      hidden: !showPricing,
-      defaultVisible: false,
       render: (record: any) =>
-        formatCurrency(record.purchase_price, {
-          currency: record.purchase_price_currency
-        })
+        `${record.quantity} ${record.part_detail?.units || ''}`.trim()
+    },
+    {
+      accessor: 'status',
+      title: t`Status`,
+      sortable: true,
+      render: (record: any) => (
+        <StatusRenderer
+          status={record.status_custom_key || record.status}
+          type={ModelType.stockitem}
+        />
+      )
+    },
+    {
+      accessor: 'batch',
+      title: t`Batch Code`,
+      sortable: true
+    },
+    {
+      accessor: 'location_detail',
+      title: t`Location`,
+      sortable: true,
+      render: (record: any) =>
+        record.location_detail ? (
+          <RenderStockLocation instance={record.location_detail} />
+        ) : (
+          '-'
+        )
     },
     {
       accessor: 'stock_value',
       title: t`Stock Value`,
-      sortable: false,
-      hidden: !showPricing,
-      render: (record: any) => {
-        const min_price =
-          record.purchase_price || record.part_detail?.pricing_min;
-        const max_price =
-          record.purchase_price || record.part_detail?.pricing_max;
-        const currency = record.purchase_price_currency || undefined;
-
-        return formatPriceRange(min_price, max_price, {
-          currency: currency,
-          multiplier: record.quantity
-        });
-      }
+      sortable: true,
+      render: (record: any) =>
+        record.purchase_price
+          ? `$${Number(record.purchase_price * record.quantity).toFixed(2)}`
+          : '-'
     },
     {
-      accessor: 'packaging',
-      sortable: true,
-      defaultVisible: false
-    },
-    DateColumn({
-      title: t`Created`,
       accessor: 'creation_date',
-      sortable: true,
-      filter: ['created_before', 'created_after']
-    }),
-    DateColumn({
-      title: t`Last Updated`,
+      title: t`Created`,
+      sortable: true
+    },
+    {
       accessor: 'updated',
-      filter: ['updated_before', 'updated_after']
-    }),
-    DateColumn({
-      title: t`Expiry Date`,
-      accessor: 'expiry_date',
-      hidden: !useGlobalSettingsState.getState().isSet('STOCK_ENABLE_EXPIRY'),
-      defaultVisible: false,
-      filter: ['stale', 'expiry_before', 'expiry_after']
-    }),
-    DateColumn({
+      title: t`Last Updated`,
+      sortable: true
+    },
+    {
       accessor: 'stocktake_date',
       title: t`Stocktake Date`,
-      sortable: true,
-      filter: ['has_stocktake', 'stocktake_before', 'stocktake_after']
-    })
+      sortable: true
+    }
   ];
 }
 
-/**
- * Construct a list of available filters for the stock item table
- */
-function stockItemTableFilters({
-  enableExpiry
-}: {
-  enableExpiry: boolean;
-}): TableFilter[] {
-  return [
-    {
-      name: 'active',
-      label: t`Active`,
-      description: t`Show stock for active parts`
-    },
-    {
-      name: 'status',
-      label: t`Status`,
-      description: t`Filter by stock status`,
-      choiceFunction: StatusFilterOptions(ModelType.stockitem)
-    },
-    {
-      name: 'assembly',
-      label: t`Assembly`,
-      description: t`Show stock for assembled parts`
-    },
-    {
-      name: 'allocated',
-      label: t`Allocated`,
-      description: t`Show items which have been allocated`
-    },
-    {
-      name: 'available',
-      label: t`Available`,
-      description: t`Show items which are available`
-    },
-    {
-      name: 'cascade',
-      label: t`Include Sublocations`,
-      description: t`Include stock in sublocations`
-    },
-    {
-      name: 'depleted',
-      label: t`Depleted`,
-      description: t`Show depleted stock items`
-    },
-    InStockFilter(),
-    {
-      name: 'is_building',
-      label: t`In Production`,
-      description: t`Show items which are in production`
-    },
-    IncludeVariantsFilter(),
-    SupplierFilter(),
-    ManufacturerFilter(),
-    {
-      name: 'consumed',
-      label: t`Consumed`,
-      description: t`Show items which have been consumed by a build order`
-    },
-    {
-      name: 'installed',
-      label: t`Installed`,
-      description: t`Show stock items which are installed in other items`
-    },
-    {
-      name: 'sent_to_customer',
-      label: t`Sent to Customer`,
-      description: t`Show items which have been sent to a customer`
-    },
-    HasBatchCodeFilter(),
-    BatchFilter(),
-    IsSerializedFilter(),
-    SerialFilter(),
-    SerialLTEFilter(),
-    SerialGTEFilter(),
-    {
-      name: 'tracked',
-      label: t`Tracked`,
-      description: t`Show tracked items`
-    },
-    {
-      name: 'has_purchase_price',
-      label: t`Has Purchase Price`,
-      description: t`Show items which have a purchase price`
-    },
-    {
-      name: 'expired',
-      label: t`Expired`,
-      description: t`Show items which have expired`,
-      active: enableExpiry
-    },
-    {
-      name: 'stale',
-      label: t`Stale`,
-      description: t`Show items which are stale`,
-      active: enableExpiry
-    },
-    {
-      name: 'expiry_before',
-      label: t`Expired Before`,
-      description: t`Show items which expired before this date`,
-      type: 'date',
-      active: enableExpiry
-    },
-    {
-      name: 'expiry_after',
-      label: t`Expired After`,
-      description: t`Show items which expired after this date`,
-      type: 'date',
-      active: enableExpiry
-    },
-    UpdatedBeforeFilter(),
-    UpdatedAfterFilter(),
-    CreatedBeforeFilter(),
-    CreatedAfterFilter(),
-    {
-      name: 'stocktake_before',
-      label: t`Stocktake Before`,
-      description: t`Show items counted before this date`,
-      type: 'date'
-    },
-    {
-      name: 'stocktake_after',
-      label: t`Stocktake After`,
-      description: t`Show items counted after this date`,
-      type: 'date'
-    },
-    {
-      name: 'has_stocktake',
-      label: t`Has Stocktake Date`,
-      description: t`Show items which have a stocktake date`
-    },
-    {
-      name: 'external',
-      label: t`External Location`,
-      description: t`Show items in an external location`
-    },
-    TagsFilter({ modelType: ModelType.stockitem })
-  ];
-}
-
-/*
- * Load a table of stock items
- */
 export function StockItemTable({
-  params = {},
-  allowAdd = false,
-  showLocation = true,
-  showPricing = true,
-  allowReturn = false,
-  initialFilters,
-  defaultInStock = true,
-  tableName = 'stockitems'
-}: Readonly<{
+  props,
+  params,
+  tableName = 'stock-item',
+  enableSelection = false,
+  selectedRecords,
+  onSelectedRecordsChange
+}: {
+  props?: InvenTreeTableProps;
   params?: any;
-  allowAdd?: boolean;
-  showLocation?: boolean;
-  showPricing?: boolean;
-  allowReturn?: boolean;
-  defaultInStock?: boolean | null;
-  initialFilters?: TableFilter[];
-  tableName: string;
-}>) {
-  const initialStockFilters: TableFilter[] = useMemo(() => {
-    if (!!initialFilters) {
-      return initialFilters;
-    }
-
-    const filters: TableFilter[] = [];
-
-    // Optionally set the default "in_stock" filter
-    // Typically, we default to only displaying "in_stock" items,
-    // but this can be overridden by the caller if required
-    if (defaultInStock != undefined && defaultInStock != null) {
-      filters.push({
-        name: 'in_stock',
-        value: defaultInStock ? 'true' : 'false'
-      });
-    }
-
-    return filters;
-  }, [defaultInStock, initialFilters]);
-
-  const table = useTable(tableName, {
-    initialFilters: initialStockFilters
-  });
-
-  const user = useUserState();
-
-  const settings = useGlobalSettingsState();
-
-  const stockExpiryEnabled = useMemo(
-    () => settings.isSet('STOCK_ENABLE_EXPIRY'),
-    [settings]
-  );
-
-  const tableColumns = useMemo(
-    () =>
-      stockItemTableColumns({
-        showLocation: showLocation ?? true,
-        showPricing: showPricing ?? true
-      }),
-    [showLocation, showPricing]
-  );
-
-  const tableFilters: TableFilter[] = useMemo(
-    () =>
-      stockItemTableFilters({
-        enableExpiry: stockExpiryEnabled
-      }),
-    [stockExpiryEnabled]
-  );
-
-  const stockOperationProps: StockOperationProps = useMemo(() => {
-    return {
-      items: table.selectedRecords,
-      refresh: () => {
-        table.clearSelectedRecords();
-        table.refreshTable();
-      },
-      filters: {
-        in_stock: true
-      }
-    };
-  }, [table.selectedRecords, table.refreshTable]);
-
-  const newStockItemFields = useStockFields({
-    create: true,
-    partId: params.part,
-    supplierPartId: params.supplier_part,
-    pricing: params.pricing,
-    modalId: 'add-stock-item'
-  });
-
-  const newStockItem = useCreateApiFormModal({
-    url: ApiEndpoints.stock_item_list,
-    title: t`Add Stock Item`,
-    modalId: 'add-stock-item',
-    fields: newStockItemFields,
-    initialData: {
-      part: params.part,
-      location: params.location
-    },
-    follow: params.openNewStockItem ?? true,
-    table: table,
-    modelType: ModelType.stockitem,
-    successMessage: t`Stock item created`,
-    keepOpenOption: true
-  });
-
-  const [partsToOrder, setPartsToOrder] = useState<any[]>([]);
-
-  const orderPartsWizard = OrderPartsWizard({
-    parts: partsToOrder
-  });
-
-  const stockAdjustActions = useStockAdjustActions({
-    formProps: stockOperationProps,
-    return: allowReturn,
-    changeBatch: true
-  });
-
-  const tableActions = useMemo(() => {
-    return [
-      stockAdjustActions.dropdown,
-      <ActionButton
-        key='stock-order'
-        hidden={!user.hasAddRole(UserRoles.purchase_order)}
-        tooltip={t`Order items`}
-        icon={<InvenTreeIcon icon='buy' />}
-        disabled={!table.hasSelectedRecords}
-        onClick={() => {
-          setPartsToOrder(
-            table.selectedRecords.map((record) => record.part_detail)
-          );
-          orderPartsWizard.openWizard();
-        }}
-      />,
-      <AddItemButton
-        key='add-stock-item'
-        hidden={!allowAdd || !user.hasAddRole(UserRoles.stock)}
-        tooltip={t`Add Stock Item`}
-        onClick={() => newStockItem.open()}
-      />
-    ];
-  }, [
-    user,
-    allowAdd,
-    table.hasSelectedRecords,
-    table.selectedRecords,
-    stockAdjustActions.dropdown
-  ]);
+  tableName?: string;
+  enableSelection?: boolean;
+  selectedRecords?: any[];
+  onSelectedRecordsChange?: (records: any[]) => void;
+}) {
+  const table = useTable(tableName);
+  const tableColumns = useMemo(() => stockItemColumns(), []);
 
   return (
-    <>
-      {newStockItem.modal}
-      {orderPartsWizard.wizard}
-      {stockAdjustActions.modals.map((modal) => modal.modal)}
-      <InvenTreeTable
-        url={apiUrl(ApiEndpoints.stock_item_list)}
-        tableState={table}
-        columns={tableColumns}
-        props={{
-          enableDownload: true,
-          enableSelection: true,
-          enableLabels: true,
-          enableReports: true,
-          tableFilters: tableFilters,
-          tableActions: tableActions,
-          modelType: ModelType.stockitem,
-          params: {
-            ...params,
-            part_detail: true,
-            location_detail: true,
-            supplier_part_detail: true
-          }
-        }}
-      />
-    </>
+    <InvenTreeTable
+      url={apiUrl(ApiEndpoints.stock_item_list)}
+      tableState={table}
+      columns={tableColumns}
+      props={{
+        ...props,
+        modelType: ModelType.stockitem,
+        enableSelection: enableSelection,
+        params: {
+          ...params,
+          ...props?.params,
+          part_detail: true,
+          location_detail: true,
+          tags: true
+        }
+      }}
+    />
   );
 }

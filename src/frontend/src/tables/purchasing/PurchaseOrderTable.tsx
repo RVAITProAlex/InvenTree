@@ -107,7 +107,8 @@ export function PurchaseOrderTable({
           r?.project_code_detail?.code ?? r?.project_code ?? ''
         ).toLowerCase();
         const desc = String(r?.description ?? '').toLowerCase();
-        return code.includes(refLower) || desc.includes(refLower);
+        const notes = String(r?.notes ?? '').toLowerCase();
+        return code.includes(refLower) || desc.includes(refLower) || notes.includes(refLower);
       });
     },
     [filterProjectRef]

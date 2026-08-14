@@ -242,7 +242,7 @@ export default function BuildDetail() {
     }
   };
 
-// Attach selected existing POs to this project (regardless of PO status)
+// Attach selected existing POs to this project
   const handleAttachSelectedPos = async () => {
     if (selectedPoIds.length === 0) return;
     setIsAttachingPo(true);
@@ -251,27 +251,41 @@ export default function BuildDetail() {
       const projectRef = build.reference || `PROJ-${build.pk}`;
 
       const results = await Promise.allSettled(
-        selectedPoIds.map((poId) =>
-          api.patch(apiUrl(ApiEndpoints.purchase_order_list, poId), {
-            project_code: projectRef,
-            description: `Linked to Project ${projectRef}`
-          })
-        )
+        selectedPosToAttach.map(async (po) => {
+          const poId = po.pk ?? po.id;
+          const currentDesc = po.description || '';
+          const newDesc = currentDesc.includes(projectRef)
+            ? currentDesc
+            : currentDesc
+            ? `${currentDesc} (Project ${projectRef})`
+            : `Project ${projectRef}`;
+
+          return api.patch(apiUrl(ApiEndpoints.purchase_order_list, poId), {
+            description: newDesc
+          });
+        })
       );
 
       const failed = results.filter((r) => r.status === 'rejected');
 
-      if (failed.length > 0) {
+      if (failed.length === 0) {
         notifications.show({
-          title: 'Attachment Completed with Warnings',
-          message: `${selectedPoIds.length - failed.length} PO(s) attached. Some completed POs may require administrator edit permissions in backend settings.`,
+          title: 'Purchase Orders Attached',
+          message: `${selectedPoIds.length} Purchase Order(s) linked to Project ${projectRef}`,
+          color: 'green'
+        });
+      } else if (failed.length < selectedPoIds.length) {
+        notifications.show({
+          title: 'Partial Attachment Success',
+          message: `${selectedPoIds.length - failed.length} attached. ${failed.length} failed.`,
           color: 'orange'
         });
       } else {
-        notifications.show({
-          title: 'Purchase Orders Attached',
-          message: `${selectedPoIds.length} Purchase Order(s) attached to Project ${projectRef}`,
-          color: 'green'
+        const firstError: any = (failed[0] as PromiseRejectedResult).reason;
+        console.error('Failed to attach PO:', firstError);
+        showApiErrorMessage({
+          error: firstError,
+          title: 'Failed to Attach Purchase Order'
         });
       }
 

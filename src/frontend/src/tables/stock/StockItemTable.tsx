@@ -1,52 +1,85 @@
-import { Badge, Group } from '@mantine/core';
+import { Badge, Group, Text } from '@mantine/core';
 import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
 import { ModelType } from '@lib/enums/ModelType';
 import { apiUrl } from '@lib/functions/Api';
 import useTable from '@lib/hooks/UseTable';
 import type { TableColumn, InvenTreeTableProps } from '@lib/types/Tables';
 import { t } from '@lingui/core/macro';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { InvenTreeTable } from '../../components/tables/InvenTreeTable';
 import { StatusRenderer } from '../../components/render/StatusRenderer';
 import { RenderStockLocation } from '../../components/render/Stock';
+import { useApi } from '../../contexts/ApiContext';
 
 /**
- * Universal tag extractor checking all potential API property locations
+ * Component to asynchronously fetch and render actual tags for a stock item
  */
-function extractTags(record: any): string[] {
-  const possibleSources = [
-    record?.tags,
-    record?.tag_list,
-    record?.tags_detail,
-    record?.part_detail?.tags,
-    record?.part_detail?.tag_list
-  ];
+function StockItemTagsCell({ record }: { record: any }) {
+  const [tags, setTags] = useState<string[] | null>(null);
+  const api = useApi();
 
-  const foundTags: string[] = [];
+  useEffect(() => {
+    // Check if tags are already present on record or part_detail
+    const existingTags = record?.tags ?? record?.part_detail?.tags;
 
-  for (const source of possibleSources) {
-    if (!source) continue;
-
-    if (Array.isArray(source)) {
-      source.forEach((item) => {
-        if (typeof item === 'string' && item.trim()) {
-          foundTags.push(item.trim());
-        } else if (typeof item === 'object' && item !== null) {
-          const val = item.name || item.label || item.tag || item.slug;
-          if (val) foundTags.push(String(val).trim());
-        }
-      });
-    } else if (typeof source === 'string' && source.trim()) {
-      source.split(',').forEach((s) => {
-        if (s.trim()) foundTags.push(s.trim());
-      });
+    if (existingTags && Array.isArray(existingTags) && existingTags.length > 0) {
+      setTags(existingTags.map(String));
+      return;
     }
+
+    if (typeof existingTags === 'string' && existingTags.trim()) {
+      setTags(existingTags.split(',').map((s) => s.trim()).filter(Boolean));
+      return;
+    }
+
+    // Fetch individual stock item detail to retrieve its actual assigned tags
+    if (record?.pk) {
+      api
+        .get(apiUrl(ApiEndpoints.stock_item_list, record.pk))
+        .then((res) => {
+          const data = res?.data;
+          const rawFetched = data?.tags ?? data?.part_detail?.tags;
+
+          if (Array.isArray(rawFetched)) {
+            setTags(
+              rawFetched
+                .map((t) => (typeof t === 'object' ? t?.name || t?.label : String(t)))
+                .filter(Boolean)
+            );
+          } else if (typeof rawFetched === 'string' && rawFetched.trim()) {
+            setTags(rawFetched.split(',').map((s) => s.trim()).filter(Boolean));
+          } else {
+            setTags([]);
+          }
+        })
+        .catch(() => setTags([]));
+    } else {
+      setTags([]);
+    }
+  }, [record?.pk, record?.tags]);
+
+  if (tags === null) {
+    return <Text size="xs" c="dimmed">...</Text>;
   }
 
-  // Deduplicate array
-  return Array.from(new Set(foundTags));
+  if (tags.length === 0) {
+    return <Text size="xs" c="dimmed">-</Text>;
+  }
+
+  return (
+    <Group gap={4} wrap="wrap">
+      {tags.map((tag: string, index: number) => (
+        <Badge key={`${tag}-${index}`} size="xs" variant="filled" color="blue">
+          {tag}
+        </Badge>
+      ))}
+    </Group>
+  );
 }
 
+/**
+ * Construct list of columns for Stock Item Table
+ */
 function stockItemColumns(): TableColumn[] {
   return [
     {
@@ -59,7 +92,7 @@ function stockItemColumns(): TableColumn[] {
     },
     {
       accessor: 'part_detail.IPN',
-      title: t`IPN / SKU`,
+      title: 'IPN / SKU',
       sortable: true,
       render: (record: any) =>
         record.part_detail?.IPN || record.part_detail?.ipn || record.SKU || '-'
@@ -69,41 +102,14 @@ function stockItemColumns(): TableColumn[] {
       title: t`Description`,
       sortable: true,
       render: (record: any) =>
-        record.part_detail?.description || record.notes || record.purchase_order_reference || '-'
+        record.part_detail?.description || record.notes || '-'
     },
     {
       accessor: 'tags',
       title: t`Tags`,
       sortable: false,
       switchable: true,
-      render: (record: any) => {
-        // Collect tags or fallback identifiers (like SKU / PO reference)
-        const rawTags = record?.tags || record?.part_detail?.tags;
-        let tagList: string[] = [];
-
-        if (Array.isArray(rawTags)) {
-          tagList = rawTags.map((t) => String(t)).filter(Boolean);
-        } else if (typeof rawTags === 'string' && rawTags.trim()) {
-          tagList = rawTags.split(',').map((t) => t.trim()).filter(Boolean);
-        }
-
-        // If no explicit tags exist in payload, fallback to purchase order or status tag
-        if (tagList.length === 0 && record.purchase_order_reference) {
-          tagList = [record.purchase_order_reference];
-        }
-
-        if (tagList.length === 0) return '-';
-
-        return (
-          <Group gap={4} wrap="wrap">
-            {tagList.map((tag: string, index: number) => (
-              <Badge key={`${tag}-${index}`} size="xs" variant="filled" color="blue">
-                {tag}
-              </Badge>
-            ))}
-          </Group>
-        );
-      }
+      render: (record: any) => <StockItemTagsCell record={record} />
     },
     {
       accessor: 'quantity',

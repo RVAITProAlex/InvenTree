@@ -12,51 +12,64 @@ import { RenderStockLocation } from '../../components/render/Stock';
 import { useApi } from '../../contexts/ApiContext';
 
 /**
- * Component to asynchronously fetch and render actual tags for a stock item
+ * Asynchronously queries the backend detail endpoints to retrieve and display ONLY real tags.
+ * Checks both Stock Item and Part definitions. Zero fallbacks.
  */
 function StockItemTagsCell({ record }: { record: any }) {
   const [tags, setTags] = useState<string[] | null>(null);
   const api = useApi();
 
   useEffect(() => {
-    // Check if tags are already present on record or part_detail
-    const existingTags = record?.tags ?? record?.part_detail?.tags;
+    // 1. Check if tags are already present on local record payload
+    const localTags = record?.tags ?? record?.part_detail?.tags;
 
-    if (existingTags && Array.isArray(existingTags) && existingTags.length > 0) {
-      setTags(existingTags.map(String));
+    if (Array.isArray(localTags) && localTags.length > 0) {
+      setTags(localTags.map(String));
       return;
     }
 
-    if (typeof existingTags === 'string' && existingTags.trim()) {
-      setTags(existingTags.split(',').map((s) => s.trim()).filter(Boolean));
+    if (typeof localTags === 'string' && localTags.trim()) {
+      setTags(localTags.split(',').map((s) => s.trim()).filter(Boolean));
       return;
     }
 
-    // Fetch individual stock item detail to retrieve its actual assigned tags
-    if (record?.pk) {
-      api
-        .get(apiUrl(ApiEndpoints.stock_item_list, record.pk))
-        .then((res) => {
-          const data = res?.data;
-          const rawFetched = data?.tags ?? data?.part_detail?.tags;
+    const itemId = record?.pk;
+    const partId = record?.part || record?.part_detail?.pk;
 
-          if (Array.isArray(rawFetched)) {
-            setTags(
-              rawFetched
-                .map((t) => (typeof t === 'object' ? t?.name || t?.label : String(t)))
-                .filter(Boolean)
-            );
-          } else if (typeof rawFetched === 'string' && rawFetched.trim()) {
-            setTags(rawFetched.split(',').map((s) => s.trim()).filter(Boolean));
-          } else {
-            setTags([]);
-          }
-        })
-        .catch(() => setTags([]));
-    } else {
+    if (!itemId && !partId) {
       setTags([]);
+      return;
     }
-  }, [record?.pk, record?.tags]);
+
+    // 2. Fetch directly from backend endpoints to extract actual assigned tags
+    const requests: Promise<any>[] = [];
+    if (itemId) {
+      requests.push(api.get(apiUrl(ApiEndpoints.stock_item_list, itemId)).catch(() => null));
+    }
+    if (partId) {
+      requests.push(api.get(apiUrl(ApiEndpoints.part_list, partId)).catch(() => null));
+    }
+
+    Promise.all(requests).then((responses) => {
+      const foundTags: string[] = [];
+
+      responses.forEach((res) => {
+        const raw = res?.data?.tags;
+        if (Array.isArray(raw)) {
+          raw.forEach((t) => {
+            const tagStr = typeof t === 'object' ? t?.name || t?.label : String(t);
+            if (tagStr && tagStr.trim()) foundTags.push(tagStr.trim());
+          });
+        } else if (typeof raw === 'string' && raw.trim()) {
+          raw.split(',').forEach((s) => {
+            if (s.trim()) foundTags.push(s.trim());
+          });
+        }
+      });
+
+      setTags(Array.from(new Set(foundTags)));
+    });
+  }, [record?.pk, record?.part]);
 
   if (tags === null) {
     return <Text size="xs" c="dimmed">...</Text>;
@@ -180,7 +193,6 @@ export function StockItemTable({
   const table = useTable(tableName);
   const tableColumns = useMemo(() => stockItemColumns(), []);
 
-  // Broadcast row selections if used in parent modals
   useEffect(() => {
     if (onSelectedRecordsChange && table.selectedRecords) {
       onSelectedRecordsChange(table.selectedRecords);

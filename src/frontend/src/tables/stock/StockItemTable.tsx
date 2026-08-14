@@ -11,32 +11,53 @@ import { StatusRenderer } from '../../components/render/StatusRenderer';
 import { RenderStockLocation } from '../../components/render/Stock';
 
 /**
- * Robust helper to parse tags regardless of API format (string, array, or object)
+ * Universal tag parser that extracts all tags from strings, arrays, or objects
  */
 function parseTags(tagInput: any): string[] {
   if (!tagInput) return [];
 
+  // Handle stringified JSON arrays
+  if (typeof tagInput === 'string') {
+    const trimmed = tagInput.trim();
+    if (
+      (trimmed.startsWith('[') && trimmed.endsWith(']')) ||
+      (trimmed.startsWith('{') && trimmed.endsWith('}'))
+    ) {
+      try {
+        tagInput = JSON.parse(trimmed);
+      } catch {
+        // Fall back to standard string splitting below
+      }
+    }
+  }
+
+  // Handle arrays of strings or objects
   if (Array.isArray(tagInput)) {
     return tagInput
-      .map((item) => {
-        if (typeof item === 'string') return item.trim();
-        if (typeof item === 'object' && item !== null) {
-          return item.name || item.label || item.tag || item.value || '';
+      .flatMap((item) => {
+        if (typeof item === 'string') {
+          return item.split(/[,|]/).map((s) => s.trim().replace(/^['"]|['"]$/g, ''));
         }
-        return String(item).trim();
+        if (typeof item === 'object' && item !== null) {
+          const val = item.name || item.label || item.tag || item.value || item.slug || '';
+          return [String(val).trim()];
+        }
+        return [String(item).trim()];
       })
       .filter(Boolean);
   }
 
+  // Handle comma or pipe separated strings
   if (typeof tagInput === 'string') {
     return tagInput
-      .split(',')
-      .map((s) => s.trim())
+      .split(/[,|]/)
+      .map((s) => s.trim().replace(/^['"]|['"]$/g, ''))
       .filter(Boolean);
   }
 
+  // Handle single object representations
   if (typeof tagInput === 'object' && tagInput !== null) {
-    const name = tagInput.name || tagInput.label || tagInput.tag || tagInput.value;
+    const name = tagInput.name || tagInput.label || tagInput.tag || tagInput.value || tagInput.slug;
     if (name) return [String(name).trim()];
   }
 
@@ -74,14 +95,22 @@ function stockItemColumns(): TableColumn[] {
       sortable: false,
       switchable: true,
       render: (record: any) => {
-        const itemTags = parseTags(record?.tags);
-        const partTags = parseTags(record?.part_detail?.tags);
+        const itemTags = parseTags(
+          record?.tags ?? record?.tag_list ?? record?.tags_detail ?? record?.keywords
+        );
+        const partTags = parseTags(
+          record?.part_detail?.tags ??
+            record?.part_detail?.tag_list ??
+            record?.part_detail?.keywords
+        );
+
+        // Deduplicate tags
         const allTags = Array.from(new Set([...itemTags, ...partTags]));
 
         if (allTags.length === 0) return '-';
 
         return (
-          <Group gap={4} wrap="nowrap">
+          <Group gap={4} wrap="wrap">
             {allTags.map((tag: string) => (
               <Badge key={tag} size="xs" variant="filled" color="blue">
                 {tag}

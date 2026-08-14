@@ -11,6 +11,39 @@ import { StatusRenderer } from '../../components/render/StatusRenderer';
 import { RenderStockLocation } from '../../components/render/Stock';
 
 /**
+ * Robust helper to parse tags regardless of API format (string, array, or object)
+ */
+function parseTags(tagInput: any): string[] {
+  if (!tagInput) return [];
+
+  if (Array.isArray(tagInput)) {
+    return tagInput
+      .map((item) => {
+        if (typeof item === 'string') return item.trim();
+        if (typeof item === 'object' && item !== null) {
+          return item.name || item.label || item.tag || item.value || '';
+        }
+        return String(item).trim();
+      })
+      .filter(Boolean);
+  }
+
+  if (typeof tagInput === 'string') {
+    return tagInput
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+
+  if (typeof tagInput === 'object' && tagInput !== null) {
+    const name = tagInput.name || tagInput.label || tagInput.tag || tagInput.value;
+    if (name) return [String(name).trim()];
+  }
+
+  return [];
+}
+
+/**
  * Construct list of columns for Stock Item Table
  */
 function stockItemColumns(): TableColumn[] {
@@ -41,10 +74,8 @@ function stockItemColumns(): TableColumn[] {
       sortable: false,
       switchable: true,
       render: (record: any) => {
-        const itemTags = Array.isArray(record?.tags) ? record.tags : [];
-        const partTags = Array.isArray(record?.part_detail?.tags)
-          ? record.part_detail.tags
-          : [];
+        const itemTags = parseTags(record?.tags);
+        const partTags = parseTags(record?.part_detail?.tags);
         const allTags = Array.from(new Set([...itemTags, ...partTags]));
 
         if (allTags.length === 0) return '-';
@@ -52,7 +83,7 @@ function stockItemColumns(): TableColumn[] {
         return (
           <Group gap={4} wrap="nowrap">
             {allTags.map((tag: string) => (
-              <Badge key={tag} size="xs" variant="outline" color="blue">
+              <Badge key={tag} size="xs" variant="filled" color="blue">
                 {tag}
               </Badge>
             ))}

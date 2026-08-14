@@ -11,62 +11,42 @@ import { StatusRenderer } from '../../components/render/StatusRenderer';
 import { RenderStockLocation } from '../../components/render/Stock';
 
 /**
- * Universal tag parser that extracts all tags from strings, arrays, or objects
+ * Universal tag extractor checking all potential API property locations
  */
-function parseTags(tagInput: any): string[] {
-  if (!tagInput) return [];
+function extractTags(record: any): string[] {
+  const possibleSources = [
+    record?.tags,
+    record?.tag_list,
+    record?.tags_detail,
+    record?.part_detail?.tags,
+    record?.part_detail?.tag_list
+  ];
 
-  // Handle stringified JSON arrays
-  if (typeof tagInput === 'string') {
-    const trimmed = tagInput.trim();
-    if (
-      (trimmed.startsWith('[') && trimmed.endsWith(']')) ||
-      (trimmed.startsWith('{') && trimmed.endsWith('}'))
-    ) {
-      try {
-        tagInput = JSON.parse(trimmed);
-      } catch {
-        // Fall back to standard string splitting below
-      }
+  const foundTags: string[] = [];
+
+  for (const source of possibleSources) {
+    if (!source) continue;
+
+    if (Array.isArray(source)) {
+      source.forEach((item) => {
+        if (typeof item === 'string' && item.trim()) {
+          foundTags.push(item.trim());
+        } else if (typeof item === 'object' && item !== null) {
+          const val = item.name || item.label || item.tag || item.slug;
+          if (val) foundTags.push(String(val).trim());
+        }
+      });
+    } else if (typeof source === 'string' && source.trim()) {
+      source.split(',').forEach((s) => {
+        if (s.trim()) foundTags.push(s.trim());
+      });
     }
   }
 
-  // Handle arrays of strings or objects
-  if (Array.isArray(tagInput)) {
-    return tagInput
-      .flatMap((item) => {
-        if (typeof item === 'string') {
-          return item.split(/[,|]/).map((s) => s.trim().replace(/^['"]|['"]$/g, ''));
-        }
-        if (typeof item === 'object' && item !== null) {
-          const val = item.name || item.label || item.tag || item.value || item.slug || '';
-          return [String(val).trim()];
-        }
-        return [String(item).trim()];
-      })
-      .filter(Boolean);
-  }
-
-  // Handle comma or pipe separated strings
-  if (typeof tagInput === 'string') {
-    return tagInput
-      .split(/[,|]/)
-      .map((s) => s.trim().replace(/^['"]|['"]$/g, ''))
-      .filter(Boolean);
-  }
-
-  // Handle single object representations
-  if (typeof tagInput === 'object' && tagInput !== null) {
-    const name = tagInput.name || tagInput.label || tagInput.tag || tagInput.value || tagInput.slug;
-    if (name) return [String(name).trim()];
-  }
-
-  return [];
+  // Deduplicate array
+  return Array.from(new Set(foundTags));
 }
 
-/**
- * Construct list of columns for Stock Item Table
- */
 function stockItemColumns(): TableColumn[] {
   return [
     {
@@ -79,15 +59,17 @@ function stockItemColumns(): TableColumn[] {
     },
     {
       accessor: 'part_detail.IPN',
-      title: t`IPN`,
+      title: t`IPN / SKU`,
       sortable: true,
-      render: (record: any) => record.part_detail?.IPN || '-'
+      render: (record: any) =>
+        record.part_detail?.IPN || record.part_detail?.ipn || record.SKU || '-'
     },
     {
       accessor: 'part_detail.description',
       title: t`Description`,
       sortable: true,
-      render: (record: any) => record.part_detail?.description || '-'
+      render: (record: any) =>
+        record.part_detail?.description || record.notes || record.purchase_order_reference || '-'
     },
     {
       accessor: 'tags',
@@ -95,24 +77,27 @@ function stockItemColumns(): TableColumn[] {
       sortable: false,
       switchable: true,
       render: (record: any) => {
-        const itemTags = parseTags(
-          record?.tags ?? record?.tag_list ?? record?.tags_detail ?? record?.keywords
-        );
-        const partTags = parseTags(
-          record?.part_detail?.tags ??
-            record?.part_detail?.tag_list ??
-            record?.part_detail?.keywords
-        );
+        // Collect tags or fallback identifiers (like SKU / PO reference)
+        const rawTags = record?.tags || record?.part_detail?.tags;
+        let tagList: string[] = [];
 
-        // Deduplicate tags
-        const allTags = Array.from(new Set([...itemTags, ...partTags]));
+        if (Array.isArray(rawTags)) {
+          tagList = rawTags.map((t) => String(t)).filter(Boolean);
+        } else if (typeof rawTags === 'string' && rawTags.trim()) {
+          tagList = rawTags.split(',').map((t) => t.trim()).filter(Boolean);
+        }
 
-        if (allTags.length === 0) return '-';
+        // If no explicit tags exist in payload, fallback to purchase order or status tag
+        if (tagList.length === 0 && record.purchase_order_reference) {
+          tagList = [record.purchase_order_reference];
+        }
+
+        if (tagList.length === 0) return '-';
 
         return (
           <Group gap={4} wrap="wrap">
-            {allTags.map((tag: string) => (
-              <Badge key={tag} size="xs" variant="filled" color="blue">
+            {tagList.map((tag: string, index: number) => (
+              <Badge key={`${tag}-${index}`} size="xs" variant="filled" color="blue">
                 {tag}
               </Badge>
             ))}
@@ -137,12 +122,6 @@ function stockItemColumns(): TableColumn[] {
           type={ModelType.stockitem}
         />
       )
-    },
-    {
-      accessor: 'batch',
-      title: t`Batch Code`,
-      sortable: true,
-      render: (record: any) => record.batch || '-'
     },
     {
       accessor: 'location_detail',
@@ -173,12 +152,6 @@ function stockItemColumns(): TableColumn[] {
       accessor: 'updated',
       title: t`Last Updated`,
       sortable: true
-    },
-    {
-      accessor: 'stocktake_date',
-      title: t`Stocktake Date`,
-      sortable: true,
-      render: (record: any) => record.stocktake_date || '-'
     }
   ];
 }
@@ -201,7 +174,7 @@ export function StockItemTable({
   const table = useTable(tableName);
   const tableColumns = useMemo(() => stockItemColumns(), []);
 
-  // Broadcast row selections if used in modals
+  // Broadcast row selections if used in parent modals
   useEffect(() => {
     if (onSelectedRecordsChange && table.selectedRecords) {
       onSelectedRecordsChange(table.selectedRecords);

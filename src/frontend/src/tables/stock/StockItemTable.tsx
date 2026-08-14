@@ -5,7 +5,7 @@ import { apiUrl } from '@lib/functions/Api';
 import useTable from '@lib/hooks/UseTable';
 import type { TableColumn, InvenTreeTableProps } from '@lib/types/Tables';
 import { t } from '@lingui/core/macro';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { InvenTreeTable } from '../../components/tables/InvenTreeTable';
 import { StatusRenderer } from '../../components/render/StatusRenderer';
 import { RenderStockLocation } from '../../components/render/Stock';
@@ -26,12 +26,14 @@ function stockItemColumns(): TableColumn[] {
     {
       accessor: 'part_detail.IPN',
       title: t`IPN`,
-      sortable: true
+      sortable: true,
+      render: (record: any) => record.part_detail?.IPN || '-'
     },
     {
       accessor: 'part_detail.description',
       title: t`Description`,
-      sortable: true
+      sortable: true,
+      render: (record: any) => record.part_detail?.description || '-'
     },
     {
       accessor: 'tags',
@@ -79,7 +81,8 @@ function stockItemColumns(): TableColumn[] {
     {
       accessor: 'batch',
       title: t`Batch Code`,
-      sortable: true
+      sortable: true,
+      render: (record: any) => record.batch || '-'
     },
     {
       accessor: 'location_detail',
@@ -114,7 +117,8 @@ function stockItemColumns(): TableColumn[] {
     {
       accessor: 'stocktake_date',
       title: t`Stocktake Date`,
-      sortable: true
+      sortable: true,
+      render: (record: any) => record.stocktake_date || '-'
     }
   ];
 }
@@ -137,6 +141,13 @@ export function StockItemTable({
   const table = useTable(tableName);
   const tableColumns = useMemo(() => stockItemColumns(), []);
 
+  // Broadcast row selections if used in modals
+  useEffect(() => {
+    if (onSelectedRecordsChange && table.selectedRecords) {
+      onSelectedRecordsChange(table.selectedRecords);
+    }
+  }, [table.selectedRecords, onSelectedRecordsChange]);
+
   return (
     <InvenTreeTable
       url={apiUrl(ApiEndpoints.stock_item_list)}
@@ -150,8 +161,7 @@ export function StockItemTable({
           ...params,
           ...props?.params,
           part_detail: true,
-          location_detail: true,
-          tags: true
+          location_detail: true
         }
       }}
     />

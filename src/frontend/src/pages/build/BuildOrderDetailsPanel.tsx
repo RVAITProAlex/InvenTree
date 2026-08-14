@@ -72,7 +72,6 @@ export function BuildOrderDetailsPanel({
     return null;
   }, [instance]);
 
-  // Description / Title fallback
   const projectTitle =
     instance?.description ||
     instance?.title ||
@@ -84,6 +83,39 @@ export function BuildOrderDetailsPanel({
     instance?.title ||
     instance?.notes ||
     'No description provided.';
+
+  // Helper renderer for person / user details
+  const renderPerson = (detail: any, rawValue: any) => {
+    if (detail) {
+      if (typeof detail === 'object') {
+        if (detail.username || detail.first_name || detail.last_name) {
+          return <RenderUser user={detail} />;
+        }
+        if (detail.name || detail.label) {
+          return <Badge color='blue'>{detail.label || detail.name}</Badge>;
+        }
+      }
+      return <Badge color='blue'>{String(detail)}</Badge>;
+    }
+    if (rawValue) {
+      return <Badge color='gray'>{String(rawValue)}</Badge>;
+    }
+    return <Text size='sm'>-</Text>;
+  };
+
+  // Helper renderer for staging location
+  const renderLocation = (detail: any, rawValue: any) => {
+    if (detail && typeof detail === 'object' && detail.pk) {
+      return <RenderStockLocation instance={detail} />;
+    }
+    if (detail?.name || detail?.pathstring) {
+      return <Text size='sm'>{detail.pathstring || detail.name}</Text>;
+    }
+    if (rawValue) {
+      return <Text size='sm'>Location #{String(rawValue)}</Text>;
+    }
+    return <Text size='sm'>-</Text>;
+  };
 
   return (
     <Grid p='xs' gutter='md'>
@@ -164,35 +196,17 @@ export function BuildOrderDetailsPanel({
 
             <Group justify='space-between'>
               <Text size='sm' c='dimmed'>Project Lead:</Text>
-              {instance?.responsible_detail ? (
-                <RenderUser user={instance.responsible_detail} />
-              ) : instance?.responsible ? (
-                <Text size='sm'>{String(instance.responsible)}</Text>
-              ) : (
-                <Text size='sm'>-</Text>
-              )}
+              {renderPerson(instance?.responsible_detail, instance?.responsible)}
             </Group>
 
             <Group justify='space-between'>
               <Text size='sm' c='dimmed'>Created By:</Text>
-              {instance?.issued_by_detail ? (
-                <RenderUser user={instance.issued_by_detail} />
-              ) : instance?.issued_by ? (
-                <Text size='sm'>{String(instance.issued_by)}</Text>
-              ) : (
-                <Text size='sm'>-</Text>
-              )}
+              {renderPerson(instance?.issued_by_detail, instance?.issued_by)}
             </Group>
 
             <Group justify='space-between'>
               <Text size='sm' c='dimmed'>Staging Location:</Text>
-              {instance?.take_from_detail ? (
-                <RenderStockLocation instance={instance.take_from_detail} />
-              ) : instance?.take_from ? (
-                <Text size='sm'>{String(instance.take_from)}</Text>
-              ) : (
-                <Text size='sm'>-</Text>
-              )}
+              {renderLocation(instance?.take_from_detail, instance?.take_from)}
             </Group>
           </Stack>
         </Paper>

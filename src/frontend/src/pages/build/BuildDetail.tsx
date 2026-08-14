@@ -242,7 +242,7 @@ export default function BuildDetail() {
     }
   };
 
-// Attach selected existing POs to this project
+  // Attach selected existing POs to this project
   const handleAttachSelectedPos = async () => {
     if (selectedPoIds.length === 0) return;
     setIsAttachingPo(true);
@@ -273,12 +273,6 @@ export default function BuildDetail() {
           title: 'Purchase Orders Attached',
           message: `${selectedPoIds.length} Purchase Order(s) linked to Project ${projectRef}`,
           color: 'green'
-        });
-      } else if (failed.length < selectedPoIds.length) {
-        notifications.show({
-          title: 'Partial Attachment Success',
-          message: `${selectedPoIds.length - failed.length} attached. ${failed.length} failed.`,
-          color: 'orange'
         });
       } else {
         const firstError: any = (failed[0] as PromiseRejectedResult).reason;
@@ -311,20 +305,19 @@ export default function BuildDetail() {
     fields: {
       supplier: {},
       reference: {},
-      project_code: {},
       description: {},
       target_date: {}
     },
     initialData: {
-      project_code: build.reference,
       description: `Purchase order for Project ${build.reference || ''}`
     },
     onFormSuccess: refreshInstance
   });
 
-  const buildPanels: PanelType[] = useMemo(() => {
-    const projectRef = build.reference || `PROJ-${build.pk}`;
+  const projectRef = build.reference || `PROJ-${build.pk}`;
+  const projectName = build.description || build.title || build.notes || `Project ${projectRef}`;
 
+  const buildPanels: PanelType[] = useMemo(() => {
     return [
       {
         name: 'details',
@@ -359,7 +352,7 @@ export default function BuildDetail() {
           </Stack>
         )
       },
-{
+      {
         name: 'purchase-orders',
         label: 'Purchase Orders',
         icon: <IconShoppingCart />,
@@ -409,7 +402,8 @@ export default function BuildDetail() {
     buildLineQuery.isLoading,
     openCatalogModal,
     openAttachPoModal,
-    createPurchaseOrderModal.open
+    createPurchaseOrderModal.open,
+    projectRef
   ]);
 
   const editBuildOrderFields = useBuildOrderFields({
@@ -710,8 +704,8 @@ export default function BuildDetail() {
       <InstanceDetail query={instanceQuery} requiredRole={UserRoles.build}>
         <Stack gap='xs'>
           <PageDetail
-            title={`Build Order: ${build.reference}`}
-            subtitle={`${build.quantity} x ${build.part_detail?.full_name}`}
+            title={projectName}
+            subtitle={`Project Reference: ${projectRef}`}
             badges={buildBadges}
             editAction={editBuild.open}
             editEnabled={user.hasChangePermission(ModelType.part)}
@@ -719,7 +713,7 @@ export default function BuildDetail() {
             breadcrumbs={[{ name: 'Projects', url: '/projects' }]}
             lastCrumb={[
               {
-                name: build.reference,
+                name: projectRef,
                 url: getDetailUrl(ModelType.build, build.pk)
               }
             ]}

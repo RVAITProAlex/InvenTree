@@ -14,6 +14,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 from sql_util.utils import SubqueryCount, SubquerySum
+from taggit.serializers import TagListSerializerField, TaggitSerializer
 
 import build.models
 import common.filters
@@ -503,6 +504,7 @@ class StockItemSerializer(
     def annotate_queryset(queryset):
         """Add some extra annotations to the queryset, performing database queries as efficiently as possible."""
         queryset = queryset.prefetch_related(
+            'tags',
             'location',
             'sales_order',
             'purchase_order',
@@ -687,7 +689,7 @@ class StockItemSerializer(
         source='sales_order.reference', read_only=True, allow_null=True
     )
 
-    tags = common.filters.enable_tags_filter()
+    tags = TagListSerializerField(required=False, read_only=True)
 
 
 class SerializeStockItemSerializer(serializers.Serializer):

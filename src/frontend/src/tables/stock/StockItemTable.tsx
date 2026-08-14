@@ -1,94 +1,14 @@
-import { Badge, Group, Text } from '@mantine/core';
+import { Badge, Group } from '@mantine/core';
 import { ApiEndpoints } from '@lib/enums/ApiEndpoints';
 import { ModelType } from '@lib/enums/ModelType';
 import { apiUrl } from '@lib/functions/Api';
 import useTable from '@lib/hooks/UseTable';
 import type { TableColumn, InvenTreeTableProps } from '@lib/types/Tables';
 import { t } from '@lingui/core/macro';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { InvenTreeTable } from '../../components/tables/InvenTreeTable';
 import { StatusRenderer } from '../../components/render/StatusRenderer';
 import { RenderStockLocation } from '../../components/render/Stock';
-import { useApi } from '../../contexts/ApiContext';
-
-/**
- * Asynchronously queries the backend detail endpoints to retrieve and display ONLY real tags.
- * Checks both Stock Item and Part definitions. Zero fallbacks.
- */
-function StockItemTagsCell({ record }: { record: any }) {
-  const [tags, setTags] = useState<string[] | null>(null);
-  const api = useApi();
-
-  useEffect(() => {
-    // 1. Check if tags are already present on local record payload
-    const localTags = record?.tags ?? record?.part_detail?.tags;
-
-    if (Array.isArray(localTags) && localTags.length > 0) {
-      setTags(localTags.map(String));
-      return;
-    }
-
-    if (typeof localTags === 'string' && localTags.trim()) {
-      setTags(localTags.split(',').map((s) => s.trim()).filter(Boolean));
-      return;
-    }
-
-    const itemId = record?.pk;
-    const partId = record?.part || record?.part_detail?.pk;
-
-    if (!itemId && !partId) {
-      setTags([]);
-      return;
-    }
-
-    // 2. Fetch directly from backend endpoints to extract actual assigned tags
-    const requests: Promise<any>[] = [];
-    if (itemId) {
-      requests.push(api.get(apiUrl(ApiEndpoints.stock_item_list, itemId)).catch(() => null));
-    }
-    if (partId) {
-      requests.push(api.get(apiUrl(ApiEndpoints.part_list, partId)).catch(() => null));
-    }
-
-    Promise.all(requests).then((responses) => {
-      const foundTags: string[] = [];
-
-      responses.forEach((res) => {
-        const raw = res?.data?.tags;
-        if (Array.isArray(raw)) {
-          raw.forEach((t) => {
-            const tagStr = typeof t === 'object' ? t?.name || t?.label : String(t);
-            if (tagStr && tagStr.trim()) foundTags.push(tagStr.trim());
-          });
-        } else if (typeof raw === 'string' && raw.trim()) {
-          raw.split(',').forEach((s) => {
-            if (s.trim()) foundTags.push(s.trim());
-          });
-        }
-      });
-
-      setTags(Array.from(new Set(foundTags)));
-    });
-  }, [record?.pk, record?.part]);
-
-  if (tags === null) {
-    return <Text size="xs" c="dimmed">...</Text>;
-  }
-
-  if (tags.length === 0) {
-    return <Text size="xs" c="dimmed">-</Text>;
-  }
-
-  return (
-    <Group gap={4} wrap="wrap">
-      {tags.map((tag: string, index: number) => (
-        <Badge key={`${tag}-${index}`} size="xs" variant="filled" color="blue">
-          {tag}
-        </Badge>
-      ))}
-    </Group>
-  );
-}
 
 /**
  * Construct list of columns for Stock Item Table
@@ -122,7 +42,26 @@ function stockItemColumns(): TableColumn[] {
       title: t`Tags`,
       sortable: false,
       switchable: true,
-      render: (record: any) => <StockItemTagsCell record={record} />
+      render: (record: any) => {
+        const rawTags = record?.tags || record?.part_detail?.tags;
+        const tagList = Array.isArray(rawTags)
+          ? rawTags.map(String)
+          : typeof rawTags === 'string' && rawTags.trim()
+          ? rawTags.split(',').map((s) => s.trim()).filter(Boolean)
+          : [];
+
+        if (tagList.length === 0) return '-';
+
+        return (
+          <Group gap={4} wrap="wrap">
+            {tagList.map((tag: string, index: number) => (
+              <Badge key={`${tag}-${index}`} size="xs" variant="filled" color="blue">
+                {tag}
+              </Badge>
+            ))}
+          </Group>
+        );
+      }
     },
     {
       accessor: 'quantity',
